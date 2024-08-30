@@ -5,17 +5,18 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { useMutation } from "@tanstack/react-query"
+import { ResetIcon } from "@radix-ui/react-icons"
+import { toast } from "react-toastify"
+import { Gradients } from "@/constants/gradient"
+import { PlainColors } from "@/constants/plainColors"
 
 type ActiveTabs = 'Settings' | 'Edit' | 'Background';
+type SubActiveTabs = 'Gradient' | 'Image' | 'Solid';
 
 export function YoutubeThumbnail() {
-  const [VideoUrl, setVideoUrl] = useState('')
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-
-
   return (
-        <div id="maindiv" className="flex flex-col sm:flex-row  overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh);"}}>
+        <div id="maindiv" className="flex flex-col sm:flex-row justify-between overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh)"}}
+        >
           <ThumbnailComponent />
           <EditorSidebar text="Made By John 🔥" />
         </div>
@@ -26,139 +27,151 @@ export function YoutubeThumbnail() {
 const ThumbnailComponent = () => {
   const [showWatermark, setShowWatermark] = useState(true);
   const [watermarkStyle, setWatermarkStyle] = useState('dark');
-  const [watermarkText, setWatermarkText] = useState('Picyard');
+  const [watermarkText, setWatermarkText] = useState('ToolsArsenal');
   const [showWaterMarkOptions, setShowWaterMarkOptions] = useState(false)
   const [url, setUrl] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  const { mutate, isLoading, isError } = useMutation({
-    mutationFn: async (videoUrl: string) => {
-      const response = await fetch("/api/youtube", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ videoUrl }),
-      })
-      const data = await response.json()
-      return data
-    },
-  })
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
+    setIsLoading(true)
     e.preventDefault();
-    const result: any = mutate(url)
-    setUrl(result.thumbnails.maxres)
+    try {
+      const result = await fetch('/api/youtube',{
+        method: 'POST',
+        body: JSON.stringify({videoUrl: url})
+      })
+      const data = await result.json()
+      console.log(result, "result")
+      setUrl(data.thumbnails.maxres)
+    } catch (error) {
+      setError(true)
+    }finally {
+      setIsLoading(false)
+    }
+    
   };
+  const ResetState = () => {
+    setUrl('')
+    setIsLoading(true)
+    setError(false)
+  }
   const toggleWatermark = () => {
     setShowWaterMarkOptions(prev => !prev)
   }
-  if(isError) {
-    return <div>Error</div>
+  if(error) {
+    toast.error("Error fetching thumbnail")
+    ResetState()
   }
   return (
-    <div className="flex items-center justify-center py-4 w-full">
-    <div className="relative flex items-center justify-center p-12 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500 shadow-lg md:max-w-[60%] aspect-video">
-    {
-      !url ? (
-      <div className="bg-white dark:bg-black p-4 rounded-lg min-w-[300px] shadow-md transform perspective-500 hover:rotate-y-1 hover:rotate-x-1 transition-transform duration-300">
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="url-input" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            Enter URL here
-          </label>
-          <Input
-            type="text"
-            id="url-input"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste youtube video URL here"
-            className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm rounded-lg block w-full p-2.5 mb-4"
-          />
-          <div className="flex justify-end">
-          <Button className="text-sm bg-gray-900 text-white font-semibold px-4 py-2 rounded-md hover:bg-gray-800 transition-colors ml-auto">
-            Get thumbnail
-          </Button>
-          </div>
-          
-        </form>
-      </div>
-      ) : (
-      <div 
-        id="imgdiv" 
-        className="grid rounded shadow-lg shadow-[#3c3a3a] relative transform perspective-500 rotate-y-0 rotate-x-0 overflow-hidden scale-100 transition-all duration-250"
-      >
-        <div className="bg-white font-sans text-black rounded border-t-0 border-r-0 border-l-0 overflow-hidden w-full">
-          <input 
-            name="photo" 
-            type="file" 
-            accept="image/png, image/jpg, image/jpeg, image/jfif" 
-            className="hidden"
-          />
-          <div>
-            <img 
-              className="w-full h-full object-cover"
-              alt="thumbnail" 
-              src={url}
+    <div className="flex flex-col items-center justify-center py-4 sm:max-w-[60%] md:w-[70%]">
+      <div className="relative flex items-center justify-center p-12 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500 shadow-lg w-full sm:w-[70%] md:max-w-[60%] aspect-video h-[350px]">
+      {
+        isLoading ? (
+        <div className="bg-white dark:bg-black p-4 rounded-lg w-full shadow-md transform perspective-500 hover:rotate-y-1 hover:rotate-x-1 transition-transform duration-300">
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="url-input" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Enter URL here
+            </label>
+            <Input
+              type="text"
+              id="url-input"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="Paste youtube video URL here"
+              className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm rounded-lg block w-full p-2.5 mb-4"
             />
+            <div className="flex justify-end">
+            <Button className="text-sm bg-gray-900 text-white font-semibold px-4 py-2 rounded-md hover:bg-gray-800 transition-colors ml-auto"
+            >
+              Get thumbnail
+            </Button>
+            </div>
+            
+          </form>
+        </div>
+        ) : (
+        <div 
+          id="imgdiv" 
+          className="grid rounded shadow-lg shadow-[#3c3a3a] relative transform perspective-500 rotate-y-0 rotate-x-0 overflow-hidden scale-100 transition-all duration-250"
+        >
+          <div className="bg-white font-sans text-black rounded border-t-0 border-r-0 border-l-0 overflow-hidden w-full">
+            <input 
+              name="photo" 
+              type="file" 
+              accept="image/png, image/jpg, image/jpeg, image/jfif" 
+              className="hidden"
+            />
+            <div>
+              <img 
+                className="w-full h-full object-cover"
+                alt="thumbnail" 
+                src={url}
+              />
+            </div>
           </div>
         </div>
-      </div>
-    )
-    }
+      )
+      }
 
-      {/* Watermark */}
-      {showWatermark && (
-        <div 
-          className="absolute bottom-2 right-2 bg-black/30 px-2 py-1 text-white text-sm font-medium rounded cursor-pointer"
-          onClick={toggleWatermark}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              toggleWatermark();
-            }
-          }}
-          role="button"
-          tabIndex={0}
-        >
-          {watermarkText}
-        </div>
-      )}
+        {/* Watermark */}
+        {showWatermark && (
+          <div 
+            className="absolute bottom-2 right-2 bg-black/30 px-2 py-1 text-white text-sm font-medium rounded cursor-pointer"
+            onClick={toggleWatermark}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                toggleWatermark();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            {watermarkText}
+          </div>
+        )}
 
-      {/* Watermark settings (normally hidden, shown here for demonstration) */}
-      <div className={cn("absolute bottom-10 right-2 bg-black text-white text-xs p-2 rounded-lg border-2 border-gray-500", showWaterMarkOptions ? 'block' : 'hidden')}>
-        <label className="flex items-center mb-2 cursor-pointer">
+        {/* Watermark settings (normally hidden, shown here for demonstration) */}
+        <div className={cn("absolute bottom-10 right-2 bg-black text-white text-xs p-2 rounded-lg border-2 border-gray-500", showWaterMarkOptions ? 'block' : 'hidden')}>
+          <label className="flex items-center mb-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showWatermark}
+              onChange={(e) => setShowWatermark(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"/>
+            <span className="ml-3 text-sm font-medium">Show Watermark</span>
+          </label>
+          <div className="flex items-center my-2 space-x-2">
+            {['dark', 'light', 'glassy'].map((style) => (
+              <button
+                type="button"
+                key={style}
+                onClick={() => setWatermarkStyle(style)}
+                className={`px-2 py-1 rounded text-xs ${
+                  watermarkStyle === style
+                    ? 'bg-teal-600 text-white'
+                    : 'bg-gray-700 text-gray-300'
+                }`}
+              >
+                {style.charAt(0).toUpperCase() + style.slice(1)}
+              </button>
+            ))}
+          </div>
           <input
-            type="checkbox"
-            checked={showWatermark}
-            onChange={(e) => setShowWatermark(e.target.checked)}
-            className="sr-only peer"
+            type="text"
+            value={watermarkText}
+            onChange={(e) => setWatermarkText(e.target.value)}
+            placeholder="Watermark text"
+            className="w-full bg-gray-800 p-1 text-sm mt-2 rounded"
           />
-          <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"/>
-          <span className="ml-3 text-sm font-medium">Show Watermark</span>
-        </label>
-        <div className="flex items-center my-2 space-x-2">
-          {['dark', 'light', 'glassy'].map((style) => (
-            <button
-              type="button"
-              key={style}
-              onClick={() => setWatermarkStyle(style)}
-              className={`px-2 py-1 rounded text-xs ${
-                watermarkStyle === style
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-gray-700 text-gray-300'
-              }`}
-            >
-              {style.charAt(0).toUpperCase() + style.slice(1)}
-            </button>
-          ))}
         </div>
-        <input
-          type="text"
-          value={watermarkText}
-          onChange={(e) => setWatermarkText(e.target.value)}
-          placeholder="Watermark text"
-          className="w-full bg-gray-800 p-1 text-sm mt-2 rounded"
-        />
       </div>
-    </div>
+      <div className="flex flex-row justify-between text-end items-end cursor-pointer hover:scale-105 transition-all duration-100 group-hover/reset">
+        <ResetIcon onClick={ResetState} className="size-4 text-gray-500 group-hover/reset:text-gray-900"/>
+      </div>
     </div>
   );
 };
@@ -172,7 +185,17 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
   const [frame, setFrame] = useState('none');
   const [color, setColor] = useState('#000000');
   const [background, setBackground] = useState('#FFFFFF');
-  const [activeTabs, setActiveTabs] = useState<ActiveTabs>('Edit')
+  const [activeTabs, setActiveTabs] = useState<ActiveTabs>('Settings')
+  const [subActiveTabs, setSubActiveTabs] = useState<SubActiveTabs>('Gradient')
+  const [selectedGradient, setSelectedGradient] = useState<string>(Gradients[0])
+  const [selectedSolidColor, setSelectedSolidColor] = useState<string>(PlainColors[0])
+
+  // extract rgb values from gradient
+  function extractRGBValues(gradient:string) {
+    const rgbRegex = /rgb\(\d{1,3},\s*\d{1,3},\s*\d{1,3}\)/g;
+    return gradient.match(rgbRegex);
+  }
+
   const handleRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Handle range input changes
   };
@@ -182,123 +205,364 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
   };
 
   return (
-    <div id="rightAside" className=" bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
-      <div className="w-full flex flex-row items-center justify-between rounded-t-xl p-2 text-xs font-medium border bg-gray-50 dark:bg-[#0f0f0f] dark:border-gray-950">
-        <button type="button" className={cn("px-4 text-center py-2 rounded-lg cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Settings' && 'bg-gray-200 dark:bg-[#121212]')} onClick={() => setActiveTabs('Settings')}>
-          <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="18" width="18" xmlns="http://www.w3.org/2000/svg" aria-labelledby="settingsIconTitle">
-            <title id="settingsIconTitle">Settings</title>
-            <path fill="none" d="M0 0h24v24H0V0z"/>
-            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-          </svg>
-        </button>
-        <button type="button" className="w-full text-center py-2 rounded-lg cursor-pointer bg-white dark:bg-[#1a1a1a] shadow-md font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1">
-          Edit
-        </button>
-        <button type="button" className="w-full text-center py-2 rounded-lg cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1">
-          Background
-        </button>
-      </div>
-
-      
-      {
-        activeTabs === 'Edit' && (
-            <>
-            
-        <div className="p-4 my-2 rounded-xl text-sm">
-        <div className="flex items-start mb-6">
-          <div className="flex items-center cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl mr-4">
-            <span>Color</span>
-            <span className="h-4 w-4 rounded-full ml-1 border border-gray-400" style={{ backgroundColor: color }} />
-          </div>
-          <div className="flex items-center cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl">
-            <span>Background</span>
-            <span className="h-4 w-4 rounded-full ml-1 border border-gray-400" style={{ backgroundColor: background }}/>
-          </div>
+      <div id="rightAside" className="w-full justify-center items-center md:justify-normal sm:max-w-[340px] md:w-full bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
+        <div className="w-full flex flex-row items-center justify-between rounded-t-xl p-2 text-xs font-medium border bg-gray-50 dark:bg-[#0f0f0f] dark:border-gray-950">
+          <p className={cn("px-4 text-center py-2 rounded-lg cursor-pointer dark:bg-[#1a1a1a] font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Settings' && 'bg-white px-4 shadow-md')}
+              onClick={() => setActiveTabs('Settings')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  setActiveTabs('Settings');
+                }
+              }}
+          >
+            <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="18" width="18" xmlns="http://www.w3.org/2000/svg" aria-labelledby="settingsIconTitle">
+              <title id="settingsIconTitle">Settings</title>
+              <path fill="none" d="M0 0h24v24H0V0z"/>
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+          </p>
+          <p className={cn("w-full text-center py-2 rounded-lg cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Edit' && 'bg-white px-4 shadow-md')}
+            onClick={() => setActiveTabs('Edit')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setActiveTabs('Edit');
+              }
+            }}
+          >Edit</p>
+          <p className={cn("w-full text-center py-2 rounded-lg cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Background' && 'bg-white px-4 shadow-md')}
+            onClick={() => setActiveTabs('Background')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                setActiveTabs('Background');
+              }
+            }}
+          >Background</p>
         </div>
-        
-
-        <div className="flex justify-between items-start">
-          <div className="flex flex-col w-full">
-            {['Round', 'Shadow', 'Padding', 'Scale'].map((label) => (
-              <div key={label} className="flex items-center mb-2 text-xs font-medium">
-                <span className="mr-2 md:mr-0 flex-1">{label}</span>
-                <input
-                  className="range accent-gray-600 mx-4 w-2/4"
-                  type="range"
-                  min={label === 'Scale' ? "0.15" : "0"}
-                  max={label === 'Round' ? "60" : label === 'Shadow' ? "100" : label === 'Padding' ? "10" : "2"}
-                  step={label === 'Padding' ? "0.5" : label === 'Scale' ? "0.1" : "1"}
-                  id={label.toLowerCase()}
-                  onChange={handleRangeChange}
-                />
+        {
+          activeTabs === 'Settings' && (
+          <div className="p-2">
+              <div className="flex items-center justify-between mt-2">
+                <h6 className="flex items-center text-sm">
+                  Quality
+                  <select className="outline-none bg-white dark:bg-[#0f0f0f] mx-2 px-2 border border-gray-600 rounded-lg text-black dark:text-white">
+                    <option value="1">1x</option>
+                    <option value="2">2x</option>
+                    <option value="4">4x</option>
+                    <option value="6">6x</option>
+                    <option value="8">8x</option>
+                  </select>
+                </h6>
+                <h6 className="flex items-center text-sm">
+                  Format
+                  <select className="outline-none bg-white dark:bg-[#0f0f0f] mx-2 px-2 border border-gray-600 rounded-lg text-black dark:text-white">
+                    <option value="png">PNG</option>
+                    <option value="jpeg">JPEG</option>
+                    <option value="svg">SVG</option>
+                    <option value="webp">WEBP</option>
+                  </select>
+                </h6>
               </div>
-            ))}
-          </div>
-          <div className="flex flex-col items-center border-l border-gray-400 px-4 py-2">
-            <span className="flex-1 font-medium px-3 py-1 mb-2 rounded-full border border-gray-600 cursor-pointer select-none text-sm bg-gray-100 dark:bg-[#1a1a1a]">
-              Tilt
-            </span>
-            {/* Removed Joystick component */}
-          </div>
-        </div>
+              <div className="my-8">
+                <div className="flex items-center text-xs mb-2 mt-4 font-medium">
+                  <label className="flex-shrink-0 w-20">Brightness:</label>
+                  <input name="brightness" className="range accent-gray-600" type="range" min="0" max="2" step="0.1" value="1"/>
+                </div>
+                <div className="flex items-center text-xs mb-2 mt-4 font-medium">
+                  <label className="flex-shrink-0 w-20">Contrast:</label>
+                  <input name="contrast" className="range accent-gray-600" type="range" min="0" max="2" step="0.1" value="1"/>
+                </div>
+                <div className="flex items-center text-xs mb-2 mt-4 font-medium">
+                  <label className="flex-shrink-0 w-20">Grayscale:</label>
+                  <input name="grayscale" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value="0"/>
+                </div>
+                <div className="flex items-center text-xs mb-2 mt-4 font-medium">
+                  <label className="flex-shrink-0 w-20">Blur:</label>
+                  <input name="blur" className="range accent-gray-600" type="range" min="0" max="10" step="0.5" value="0"/>
+                </div>
+                <div className="flex items-center text-xs mb-2 mt-4 font-medium">
+                  <label className="flex-shrink-0 w-20">Hue-rotate:</label>
+                  <input name="hueRotate" className="range accent-gray-600" type="range" min="0" max="360" step="10" value="0"/>
+                </div>
+                <div className="flex items-center text-xs mb-2 mt-4 font-medium">
+                  <label className="flex-shrink-0 w-20">Invert:</label>
+                  <input name="invert" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value="0"/>
+                </div>
+                <div className="flex items-center text-xs mb-2 mt-4 font-medium">
+                  <label className="flex-shrink-0 w-20">Opacity:</label>
+                  <input name="opacity" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value="1"/>
+                </div>
+                  <div className="flex items-center text-xs mb-2 mt-4 font-medium">
+                  <label className="flex-shrink-0 w-20">Saturate:</label>
+                  <input name="saturate" className="range accent-gray-600" type="range" min="0" max="2" step="0.1" value="1"/>
+                </div>
+                <div className="flex items-center text-xs mb-2 mt-4 font-medium">
+                  <label className="flex-shrink-0 w-20">Sepia:</label>
+                  <input name="sepia" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value="0"/>
+                </div>
+              </div>
+              <div className="flex items-center text-sm mb-4 mt-4">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 384 512" className="mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                  <title>File Name</title>
+                  <path d="M369.9 97.9L286 14C277 5 264.8-.1 252.1-.1H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V131.9c0-12.7-5.1-25-14.1-34zM332.1 128H256V51.9l76.1 76.1zM48 464V48h160v104c0 13.3 10.7 24 24 24h104v288H48z"/>
+                </svg>
+                  <span className="mx-1">File Name</span>
+                <input type="text" className="outline-none border-b border-gray-400 bg-transparent text-black dark:text-white ml-1 text-xs" value="Picyard_1725021758978"/>
+              </div>
+              <button className="flex items-center text-sm mt-2 px-4 py-2 rounded-lg font-medium border border-gray-700 bg-white dark:bg-black text-black dark:text-white hover:bg-gray-100 dark:hover:bg-[#121212]" type="button">
+                Reset 
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
+                <title>Reset</title>
+                  <path fill="none" d="M0 0h24v24H0V0z"/>
+                  <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/>
+                </svg>
+              </button>
+            </div>
+          )
+        }
+        {
+          activeTabs === 'Edit' && (
+            <>
+              <div className="p-4 my-2 rounded-xl text-sm">
+              <div>
+                <div style={{display: "flex; align-items: flex-start; margin-bottom: 24px;"}}>
+                  <div className="flex items-center cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl mr-4">
+                    <span>Color</span>
+                    <span className="h-4 w-4 rounded-full ml-1 border border-gray-400" style={{backgroundColor: "rgb(0, 0, 0)"}}/>
+                  </div>
+                  <div className="flex items-center cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl">
+                    <span>Background</span>
+                    <span className="h-4 w-4 rounded-full ml-1 border border-gray-400" style={{backgroundColor: "rgb(255, 255, 255)"}}/>
+                  </div>
+                </div>
+                <div style={{display: "flex; justify-content: space-evenly; align-items: flex-start;"}}>
+                  <div style={{display: "flex; flex-direction: column; width: 100%;"}}>
+                    <div style={{fontSize: "12px", marginBottom: "8px", fontWeight: "500", display: "flex", alignItems: "center", width: "100%"}}>
+                      <span className="mr-2 md:mr-0" style={{flex: "1 1 0%"}}>Round</span>
+                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0" max="60" step="1" id="roundness" value="1" />
+                    </div>
+                    <div style={{fontSize: "12px", marginBottom: "8px", fontWeight: "500", display: "flex", alignItems: "center"}}>
+                      <span className="mr-2 md:mr-0" style={{flex: "1 1 0%"}}>Shadow</span>
+                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0" max="100" step="1" id="shadow" value="20" />
+                    </div>
+                    <div style={{fontSize: "12px", marginBottom: "8px", fontWeight: "500", display: "flex", alignItems: "center"}}>
+                      <span className="mr-2 md:mr-0" style={{flex: "1 1 0%"}}>Padding</span>
+                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0" max="10" step="0.5" id="pdng" value="3" />
+                    </div>
+                    <div style={{fontSize: "12px", marginBottom: "8px", fontWeight: "500", display: "flex", alignItems: "center"}}>
+                      <span className="mr-2 md:mr-0" style={{flex: "1 1 0%"}}>Scale</span>
+                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0.15" max="2" step="0.1" id="scale" value="1" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center border-l border-gray-400 px-4 py-2">
+                    <span className="flex-1 font-medium px-3 py-1 mb-2 rounded-full border border-gray-600 cursor-pointer select-none text-sm bg-gray-100 dark:bg-[#1a1a1a]">
+                      Tilt
+                    </span>
+                    <div>
+                      <div data-testid="joystick-base" className="" style={{borderRadius: "40px", height: "40px", width: "40px", background: "whitesmoke", display: "flex", justifyContent: "center", alignItems: "center"}}>
+                        <button className="" type="button" style={{borderRadius: "40px", background: "black", cursor: "move", height: "26.666667px", width: "26.666667px", border: "medium", flexShrink: "0", touchAction: "none"}}/>
+                      </div>
+                    </div>
+                  </div>
+                </div>  
+                <div className="flex-wrap" style={{display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px"}}>
+                  <h6 className="flex items-center text-sm font-medium">
+                    Frame
+                    <select name="category" className="outline-none bg-white dark:bg-[#19191a] ml-2 px-2 py-1 border border-gray-600 rounded-full text-sm text-black dark:text-white">
+                      <option value="none">None</option>
+                      <option value="macOS-black">macOS Black</option>
+                      <option value="macOS-white">macOS White</option>
+                      <option value="photograph">Photograph</option>
+                      <option value="black">Black</option>
+                      <option value="white">White</option>
+                      <option value="dodgerblue">Blue</option>
+                      <option value="hotpink">Hotpink</option>
+                      <option value="green">Green</option>
+                      <option value="blueviolet">Blue Violet</option>
+                      <option value="gold">Gold</option>
+                    </select>
+                  </h6>
+                  <div className="bg-gray-100 dark:bg-[#1a1a1a]" style={{cursor: "pointer", position: "relative", display: "flex", alignItems: "center", padding: "2px 12px", border: "1px solid rgb(80, 80, 80)", borderRadius: "18px"}}>
+                    <span>Shadow</span>
+                    <span style={{height: "16px", width: "16px", borderRadius: "50%", backgroundColor: "rgb(30, 30, 30)", border: "1px solid gray", marginLeft: "4px"}}/>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 mt-4 rounded-xl text-sm w-full">
+              <div className="flex overflow-x-auto scroll-m-0 scrollbar-none">
+                {[...Array(11)].map((_, index) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+      <div key={index} className="flex-shrink-0 w-20 h-20 mr-2 rounded-sm" style={{
+                    background: 'linear-gradient(135deg, #FF002C, #FF0057, #FF0082, #FF00AD, #FF00D8, #C100FF, #8900FF, #5900FF, #2400FF)',
+                    backgroundSize: 'cover',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    filter: 'brightness(1) contrast(1) grayscale(0) blur(0px) hue-rotate(0deg) invert(0) opacity(1) saturate(1) sepia(0)',
+                    opacity: 1
+                  }}>
+                    <div className="w-12 h-12 bg-slate-50 border" style={{
+                      transform: [
+                        'perspective(400em) rotateY(-15deg) rotateX(6deg) skew(-8deg,4deg) translate3d(-4%,-2%,0)',
+                        'rotate(-8deg)',
+                        'perspective(400em) rotateY(15deg) rotateX(6deg) skew(8deg, -4deg) translate3d(4%, -2%, 0)',
+                        'translateY(-4%) perspective(400em) rotateX(18deg)',
+                        'perspective(400em) translate3d(0, -6%, 0) rotateX(34deg)',
+                        'rotateX(40deg) rotate(40deg)',
+                        'perspective(900px) rotateZ(-15deg) rotateY(10deg) skew(10deg, -5deg) translate3d(10%, 5%, 0)',
+                        'perspective(800px) rotateY(20deg) rotateX(-15deg) skew(-10deg, 5deg) translate3d(-10%, -5%, 0)',
+                        'perspective(700px) rotateX(-20deg) rotateZ(15deg) skew(5deg, -10deg) translate3d(5%, 10%, 0)',
+                        'perspective(500px) rotateY(-20deg) rotateX(10deg) skew(10deg, -5deg) translate3d(10%, 5%, 0)',
+                        'perspective(600px) rotateZ(15deg) rotateY(-10deg) skew(-5deg, 10deg) translate3d(-5%, -10%, 0)'
+                      ][index]
+                    }}/>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-center mt-4">
+                <div className="grid grid-cols-3 w-fit">
+                  {[...Array(9)].map((_, index) => (
+                    <div key={index} className="w-16 h-10 m-1 rounded bg-slate-200 dark:bg-slate-700"/>
+                  ))}
+                </div>
+              </div>
+            </div>
+            </>
+          )
+        }
+        {
+          activeTabs === 'Background' && (
+            <>
+                {/* sub menu */}
+                <div className="w-full flex flex-row items-center justify-between rounded-b-xl p-2 text-xs font-medium border bg-gray-50 dark:bg-[#0f0f0f] dark:border-gray-950">
+                  <p className={cn("w-full text-center py-2 rounded-[10px] cursor-pointer  font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] ", subActiveTabs === 'Gradient' && 'bg-white dark:bg-[#1a1a1a] shadow-md')}
+                    onClick={() => setSubActiveTabs('Gradient')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setSubActiveTabs('Gradient');
+                      }
+                    }}
+                  >
+                    Gradient
+                  </p>
+                  <p className={cn("w-full text-center py-2 rounded-[10px] cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", subActiveTabs === 'Image' && 'bg-white dark:bg-[#1a1a1a] shadow-md')}
+                    onClick={() => setSubActiveTabs('Image')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setSubActiveTabs('Image');
+                      }
+                    }}
+                  >
+                    Image
+                  </p>
+                  <p className={cn("w-full text-center py-2 rounded-[10px] cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", subActiveTabs === 'Solid' && 'bg-white dark:bg-[#1a1a1a] shadow-md')}
+                    onClick={() => setSubActiveTabs('Solid')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setSubActiveTabs('Solid');
+                      }
+                    }}
+                  >
+                    Solid
+                  </p>
+              </div>
 
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center">
-            <h6 className="text-sm font-medium mr-2">Frame</h6>
-            <select
-              name="category"
-              className="outline-none bg-white dark:bg-[#19191a] px-2 py-1 border border-gray-600 rounded-full text-sm text-black dark:text-white"
-              value={frame}
-              onChange={handleFrameChange}
-            >
-              <option value="none">None</option>
-              <option value="macOS-black">macOS Black</option>
-              <option value="macOS-white">macOS White</option>
-              <option value="photograph">Photograph</option>
-              <option value="black">Black</option>
-              <option value="white">White</option>
-              <option value="dodgerblue">Blue</option>
-              <option value="hotpink">Hotpink</option>
-              <option value="green">Green</option>
-              <option value="blueviolet">Blue Violet</option>
-              <option value="gold">Gold</option>
-            </select>
-          </div>
-          <div className="bg-gray-100 dark:bg-[#1a1a1a] cursor-pointer flex items-center px-3 py-1 border border-gray-500 rounded-full">
-            <span>Shadow</span>
-            <span className="h-4 w-4 rounded-full ml-1 bg-gray-800 border border-gray-400"/>
-          </div>
-        </div>
-      </div>
-      </>
-        )
-      }
+              {/* gradient */}
+              {
+                subActiveTabs === 'Gradient' && (
+                  <>
+                    <div className="flex mt-3">
+                      {
+                        extractRGBValues(selectedGradient)?.map((color, index) => (
+                            <span style={{background: color, height: "30px", width: "30px", margin: "4px", borderRadius: "4px", border: "1px solid gray", position: "relative"}} key={index}>
+                            <span className="absolute -top-2 -right-1 bg-white dark:bg-[rgb(5,50,50)] flex justify-center items-center rounded-full p-1">
+                              <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                              <title>whatever</title>
+                                <path fill="none" d="M0 0h24v24H0V0z" />
+                                <path d="m17.66 5.41.92.92-2.69 2.69-.92-.92 2.69-2.69M17.67 3c-.26 0-.51.1-.71.29l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.92-1.92 3.12-3.12c.4-.4.4-1.03.01-1.42l-2.34-2.34c-.2-.19-.45-.29-.7-.29zM6.92 19 5 17.08l8.06-8.06 1.92 1.92L6.92 19z" />
+                              </svg>
+                            </span>
+                          </span>
+                        ))
+                      }
+                    </div>
+                    <div className="flex w-full flex-wrap max-h-[20vh] md:max-h-[40vh] overflow-y-scroll scroll-m-0 justify-center bg-white dark:bg-[#0f0f0f] dark:border-gray-700 border-gray-300 rounded-xl mt-2 p-1">
+                      {
+                        Gradients.map((gradient, index) => (
+                          <span className={cn("block h-8 w-8 m-1 rounded-md border border-gray-400 cursor-pointer", selectedGradient === gradient && 'border-1 rounded-full')} style={{background: gradient}} key={index}
+                            onClick={() => setSelectedGradient(gradient)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                setSelectedGradient(gradient);
+                              }
+                            }}
 
+                          />
+                        )
+                      )
+                      }
+                    </div>
+                  </>
+                )
+              }
 
-      {/* Watermark toggle */}
+              {/* image */}
+              {
+                subActiveTabs === 'Image' && (
+                  <>
+                  <div className="flex w-full flex-wrap max-h-[20vh] md:max-h-[40vh] overflow-y-scroll scroll-m-0 justify-center bg-white dark:bg-[#0f0f0f] dark:border-gray-700 border-gray-300 rounded-xl mt-2 p-1">
+                    {Array.from({ length: 70 }, (_, i) => i + 1).map((number) => (
+                      <img 
+                        key={number}
+                        src={`/test${number}.webp`}
+                        alt={`bg ${number}`}
+                        className="h-12 w-12 m-1 aspect-square rounded-sm"
+                      />
+                    ))}
+                  </div>
+                  </>
+                )
+              }
+              
+              {/* solid */}
+              {
+                subActiveTabs === 'Solid' && (
+                  <div className="flex w-full flex-wrap max-h-[20vh] md:max-h-[40vh] overflow-y-scroll scroll-m-0 justify-center bg-white dark:bg-[#0f0f0f] dark:border-gray-700 border-gray-300 rounded-xl mt-2 p-1">
+                      {
+                        PlainColors.map((plainColor, index) => (
+                          <span className={cn("block h-8 w-8 m-1 rounded-md border border-gray-400 cursor-pointer", selectedSolidColor === plainColor && 'border-1 rounded-full')} style={{background: plainColor}} key={index}
+                            onClick={() => setSelectedSolidColor(plainColor)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                setSelectedGradient(plainColor);
+                              }
+                            }}
 
-      <label className="inline-flex items-center m-2 my-8 cursor-pointer">
-        <input
-          id="showWatermark"
-          type="checkbox"
-          className="sr-only peer"
-          checked={showWatermark}
-          onChange={(e) => setShowWatermark(e.target.checked)}
-        />
-        <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600" />
-        <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-100">Show Watermark</span>
-      </label>
+                          />
+                        )
+                      )
+                      }
+                    </div>
+                )
+              }
+            </>
+          )
+        }  
+      
 
-      {/* Upgrade section */}
-      <a className="flex flex-col border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-3 rounded-sm transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 mx-2" href="/pricing">
-        <button className="flex items-center text-sm" type="button">
-          <img src="/crown.webp" alt="upgrade" className="w-4 h-4 mr-2.5 rounded-sm" />
-          <span>Upgrade</span>
-        </button>
-        <p className="text-xs mt-2">
-          Get 50% off on <span className="font-semibold">Lifetime</span> deal, use code <span className="font-semibold font-mono">NEW50</span>
+        <label className="inline-flex items-center m-2 my-8 cursor-pointer">
+          <input id="showWatermark" type="checkbox" className="sr-only peer" value="" checked={showWatermark} onChange={() => setShowWatermark(!showWatermark)}/>
+          <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"/>
+          <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-100">Show Watermark</span>
+        </label> 
+        <a className="flex flex-col border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white p-3 rounded-sm transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 mx-2" href="/pricing">
+          <button className="flex items-center text-sm" type="button">
+            <img src="/crown.webp" alt="upgrade" className="w-4 h-4 mr-2.5 rounded-sm"/>
+            <span>Upgrade</span>
+          </button>
+        </a>
+        <p className="text-xs mt-2">Get 50% off on <span className="font-semibold">Lifetime</span> deal, use code <span className ="font-semibold font-mono">NEW50</span>
         </p>
-      </a>
     </div>
   );
 };
