@@ -2,167 +2,163 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ChangeEvent, useState } from "react"
+import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { useMutation } from "@tanstack/react-query"
 
 type ActiveTabs = 'Settings' | 'Edit' | 'Background';
-
-const extractYoutubeVideoId = (url: string): string | null => {
-    // Regular expression to match both URL formats
-    const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/))([^?&]+)/;
-    
-    const match = url.match(regex);
-    
-    // If a match is found, return the captured group (video ID)
-    // Otherwise, return null
-    return match ? match[1] : null;
-  };
-
 
 export function YoutubeThumbnail() {
   const [VideoUrl, setVideoUrl] = useState('')
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    const videoId = extractYoutubeVideoId(VideoUrl)
-    if (videoId) {
-      setImageUrl('https://img.youtube.com/vi/fHh29py_Uoc/maxresdefault.jpg')
-    }
-    setIsLoading(false)
-  }
-
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
 
   return (
-    <Card className="w-full max-w-md mx-auto mt-10">
-      <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="text"
-            value={VideoUrl}
-            placeholder="Enter YouTube Video Url"
-            className="w-full"
-            onChange={(e) => setVideoUrl(e.target.value)}
-            disabled={isLoading}
-          />
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            Get Thumbnail
-          </Button>
-        </form>
-        { imageUrl && (
-                <div className="mt-4">
-                <img src={imageUrl} alt="YouTube Thumbnail" className="w-full rounded-lg" />
-            </div>
-            )
-        }
-        <ImageUploadComponent />
-        <EditorSidebar text="Made By John 🔥" />
-      </CardContent>
-    </Card>
+        <div id="maindiv" className="flex flex-col sm:flex-row  overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh);"}}>
+          <ThumbnailComponent />
+          <EditorSidebar text="Made By John 🔥" />
+        </div>
   )
 }
 
 
-const ImageUploadComponent: React.FC = () => {
-  const [imageUrl, setImageUrl] = useState<string | null>('https://img.youtube.com/vi/fHh29py_Uoc/maxresdefault.jpg');
+const ThumbnailComponent = () => {
   const [showWatermark, setShowWatermark] = useState(true);
+  const [watermarkStyle, setWatermarkStyle] = useState('dark');
   const [watermarkText, setWatermarkText] = useState('Picyard');
-  const [watermarkStyle, setWatermarkStyle] = useState('Dark');
+  const [showWaterMarkOptions, setShowWaterMarkOptions] = useState(false)
+  const [url, setUrl] = useState<string>('')
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setImageUrl(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`);
-    }
+  const { mutate, isLoading, isError } = useMutation({
+    mutationFn: async (videoUrl: string) => {
+      const response = await fetch("/api/youtube", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ videoUrl }),
+      })
+      const data = await response.json()
+      return data
+    },
+  })
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const result: any = mutate(url)
+    setUrl(result.thumbnails.maxres)
   };
-
+  const toggleWatermark = () => {
+    setShowWaterMarkOptions(prev => !prev)
+  }
+  if(isError) {
+    return <div>Error</div>
+  }
   return (
-    <div className="flex justify-center items-center py-4 w-full">
-      <div 
-        className="ssMainTernary shadow-lg md:max-w-[50%] md:max-w-[60%] relative flex items-center justify-center overflow-hidden"
-        style={{
-          padding: '3rem',
-          background: 'linear-gradient(135deg, #FF002C, #FF0057, #FF0082, #FF00AD, #FF00D8, #C100FF, #8900FF, #5900FF, #2400FF)',
-          aspectRatio: 'auto',
-          filter: 'brightness(1) contrast(1) grayscale(0) blur(0px) hue-rotate(0deg) invert(0) opacity(1) saturate(1) sepia(0)',
-          scrollMargin: '0px'
-        }}
-      >
-        <div 
-          className="grid relative overflow-hidden transition-all duration-250 ease-in-out"
-          style={{
-            borderRadius: '1px',
-            boxShadow: '0px 4px 20px 0px rgb(60, 58, 58)',
-            transform: 'perspective(500px) rotateY(0deg) rotateX(0deg)',
-            scale: '1'
-          }}
-        >
-          <div className="bg-white font-sans text-black rounded overflow-hidden w-full">
-            <input 
-              type="file" 
-              accept="image/png, image/jpg, image/jpeg,image/jfif" 
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            {imageUrl && (
-              <div>
-                <img src={imageUrl} alt="thumbnail" className="w-full h-auto" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {showWatermark && (
-          <div className="absolute bottom-2 right-2 bg-black bg-opacity-30 px-2 py-1 font-medium text-white rounded cursor-pointer z-10">
-            {watermarkText}
-          </div>
-        )}
-
-        <div className="absolute bottom-9 right-2 bg-black text-xs p-2 font-medium text-white rounded-lg z-50 cursor-pointer border-2 border-silver hidden items-center">
-          <label className="inline-flex items-center my-4 cursor-pointer">
-            <input 
-              type="checkbox" 
-              className="sr-only peer" 
-              checked={showWatermark}
-              onChange={(e) => setShowWatermark(e.target.checked)}
-            />
-            <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"/>
-            <span className="ms-3 text-sm font-medium text-white">Show Watermark</span>
+    <div className="flex items-center justify-center py-4 w-full">
+    <div className="relative flex items-center justify-center p-12 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500 shadow-lg md:max-w-[60%] aspect-video">
+    {
+      !url ? (
+      <div className="bg-white dark:bg-black p-4 rounded-lg min-w-[300px] shadow-md transform perspective-500 hover:rotate-y-1 hover:rotate-x-1 transition-transform duration-300">
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="url-input" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+            Enter URL here
           </label>
-          <div className="flex items-center my-2">
-            {['Dark', 'Light', 'Glassy'].map((style) => (
-              <span 
-                key={style}
-                className={`${style === watermarkStyle ? 'bg-white text-black' : 'bg-black text-white'} rounded-md px-2 py-1 border border-gray-500 mr-2 cursor-pointer`}
-                onClick={() => setWatermarkStyle(style)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    setWatermarkStyle(style);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-              >
-                {style}
-              </span>
-            ))}
+          <Input
+            type="text"
+            id="url-input"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="Paste youtube video URL here"
+            className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm rounded-lg block w-full p-2.5 mb-4"
+          />
+          <div className="flex justify-end">
+          <Button className="text-sm bg-gray-900 text-white font-semibold px-4 py-2 rounded-md hover:bg-gray-800 transition-colors ml-auto">
+            Get thumbnail
+          </Button>
           </div>
-          <div className="flex items-center mt-1">
-            <input 
-              className="bg-gray-800 p-1 text-sm mt-2 text-white text-sm"
-              placeholder="Made By John 🔥"
-              value={watermarkText}
-              onChange={(e) => setWatermarkText(e.target.value)}
+          
+        </form>
+      </div>
+      ) : (
+      <div 
+        id="imgdiv" 
+        className="grid rounded shadow-lg shadow-[#3c3a3a] relative transform perspective-500 rotate-y-0 rotate-x-0 overflow-hidden scale-100 transition-all duration-250"
+      >
+        <div className="bg-white font-sans text-black rounded border-t-0 border-r-0 border-l-0 overflow-hidden w-full">
+          <input 
+            name="photo" 
+            type="file" 
+            accept="image/png, image/jpg, image/jpeg, image/jfif" 
+            className="hidden"
+          />
+          <div>
+            <img 
+              className="w-full h-full object-cover"
+              alt="thumbnail" 
+              src={url}
             />
           </div>
         </div>
       </div>
+    )
+    }
+
+      {/* Watermark */}
+      {showWatermark && (
+        <div 
+          className="absolute bottom-2 right-2 bg-black/30 px-2 py-1 text-white text-sm font-medium rounded cursor-pointer"
+          onClick={toggleWatermark}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              toggleWatermark();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+        >
+          {watermarkText}
+        </div>
+      )}
+
+      {/* Watermark settings (normally hidden, shown here for demonstration) */}
+      <div className={cn("absolute bottom-10 right-2 bg-black text-white text-xs p-2 rounded-lg border-2 border-gray-500", showWaterMarkOptions ? 'block' : 'hidden')}>
+        <label className="flex items-center mb-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showWatermark}
+            onChange={(e) => setShowWatermark(e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600"/>
+          <span className="ml-3 text-sm font-medium">Show Watermark</span>
+        </label>
+        <div className="flex items-center my-2 space-x-2">
+          {['dark', 'light', 'glassy'].map((style) => (
+            <button
+              type="button"
+              key={style}
+              onClick={() => setWatermarkStyle(style)}
+              className={`px-2 py-1 rounded text-xs ${
+                watermarkStyle === style
+                  ? 'bg-teal-600 text-white'
+                  : 'bg-gray-700 text-gray-300'
+              }`}
+            >
+              {style.charAt(0).toUpperCase() + style.slice(1)}
+            </button>
+          ))}
+        </div>
+        <input
+          type="text"
+          value={watermarkText}
+          onChange={(e) => setWatermarkText(e.target.value)}
+          placeholder="Watermark text"
+          className="w-full bg-gray-800 p-1 text-sm mt-2 rounded"
+        />
+      </div>
+    </div>
     </div>
   );
 };
@@ -186,7 +182,7 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
   };
 
   return (
-    <div id="rightAside" className="w-full md:max-w-[340px] bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
+    <div id="rightAside" className=" bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
       <div className="w-full flex flex-row items-center justify-between rounded-t-xl p-2 text-xs font-medium border bg-gray-50 dark:bg-[#0f0f0f] dark:border-gray-950">
         <button type="button" className={cn("px-4 text-center py-2 rounded-lg cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Settings' && 'bg-gray-200 dark:bg-[#121212]')} onClick={() => setActiveTabs('Settings')}>
           <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="18" width="18" xmlns="http://www.w3.org/2000/svg" aria-labelledby="settingsIconTitle">
