@@ -2,29 +2,167 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useMutation } from "@tanstack/react-query"
 import { ResetIcon } from "@radix-ui/react-icons"
 import { toast } from "react-toastify"
 import { Gradients } from "@/constants/gradient"
 import { PlainColors } from "@/constants/plainColors"
+import { Transform } from "@/constants/transform"
+import { Position } from "@/constants/constant"
+import { useConfirm } from "@/hooks/use-confirm"
 
 type ActiveTabs = 'Settings' | 'Edit' | 'Background';
 type SubActiveTabs = 'Gradient' | 'Image' | 'Solid';
+const initialTransform = 'perspective(500px) rotateY(0deg) rotateX(0deg)';
+const initialPosition = '3rem';
+const initialFileName = 'ToolsArsenal_2348239234';
+const initialLinearGradient = 'linear-gradient(135deg, rgb(255, 0, 44), rgb(255, 0, 87), rgb(255, 0, 130), rgb(255, 0, 173), rgb(255, 0, 216))';
+
+const initialFilters: Partial<Filters> = {
+  brightness: 1,
+  contrast: 1,
+  grayscale: 0,
+  blur: 0,
+  hueRotate: 0,
+  invert: 0,
+  opacity: 1,
+  saturate: 1,
+  sepia: 0
+}
+
+
+interface Filters {
+  brightness: number
+  setBrightness: (value: number) => void
+  contrast: number
+  setContrast: (value: number) => void
+  grayscale: number
+  setGrayscale: (value: number) => void
+  blur: number
+  setBlur: (value: number) => void
+  hueRotate: number
+  setHueRotate: (value: number) => void
+  invert: number
+  setInvert: (value: number) => void
+  opacity: number
+  setOpacity: (value: number) => void
+  saturate: number
+  setSaturate: (value: number) => void
+  sepia: number
+  setSepia: (value: number) => void
+}
+interface ThumbnailComponentProps {
+  paddingValue: number
+  imageScale: number
+  imageBorder: number
+  imageShadow: number
+  imageTransform: string
+  imagePosition: string
+  filters: Partial<Filters>
+  linearGradient: string
+  backgroundImage: number
+  subActiveTab: SubActiveTabs
+}
+
+interface EditorSidebarProps {
+  text?: string
+  paddingValue: number
+  setPaddingValue: (value: number) => void
+  imageScale: number
+  setImageScale: (value: number) => void
+  imageBorder: number
+  setImageBorder: (value: number) => void
+  imageShadow: number
+  setImageShadow: (value: number) => void
+  imageTransform: string
+  setImageTransform: (value: string) => void
+  imagePosition: string
+  setImagePosition: (value: string) => void
+  filters: Filters
+  setFilters: (value: Filters) => void
+  fileName: string
+  setFileName: (value: string) => void
+  linearGradient: string
+  setLinearGradient: (value: string) => void
+  backgroundImage: number
+  setBackgroundImage: (value: number) => void
+  subActiveTab: SubActiveTabs
+  setSubActiveTab: (value: SubActiveTabs) => void
+}
 
 export function YoutubeThumbnail() {
+  const [paddingValue, setPaddingValue] = useState(3)
+  const [imageScale, setImageScale] = useState(1)
+  const [imageBorder, setImageBorder] = useState(1)
+  const [imageShadow, setImageShadow] = useState(18)
+  const [imageTransform, setImageTransform] = useState(initialTransform)
+  const [imagePosition, setImagePosition] = useState(initialPosition)
+  const [filters, setFilters] = useState(initialFilters)
+  const [fileName, setFileName] = useState(initialFileName)
+  const [linearGradient, setLinearGradient] = useState(initialLinearGradient)
+  const [backgroundImage, setBackgroundImage] = useState(1)
+  const [subActiveTab, setSubActiveTab] = useState<SubActiveTabs>('Gradient')
   return (
         <div id="maindiv" className="flex flex-col sm:flex-row justify-between overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh)"}}
         >
-          <ThumbnailComponent />
-          <EditorSidebar text="Made By John 🔥" />
-        </div>
+          <ThumbnailComponent 
+            paddingValue={paddingValue} 
+            imageScale={imageScale} 
+            imageBorder={imageBorder}
+            imageShadow={imageShadow}
+            imageTransform={imageTransform}
+            imagePosition={imagePosition}
+            filters={filters}
+            linearGradient={linearGradient}
+            backgroundImage={backgroundImage}
+            subActiveTab={subActiveTab}
+          />
+          <EditorSidebar 
+            text="Made By John 🔥" 
+            paddingValue={paddingValue} 
+            setPaddingValue={setPaddingValue} 
+            imageScale={imageScale} 
+            setImageScale={setImageScale}
+            imageBorder={imageBorder}
+            setImageBorder={setImageBorder}
+            imageShadow={imageShadow}
+            setImageShadow={setImageShadow}
+            imageTransform={imageTransform}
+            setImageTransform={setImageTransform}
+            imagePosition={imagePosition}
+            setImagePosition={setImagePosition}
+            filters={filters}
+            setFilters={setFilters}
+            fileName={fileName}
+            setFileName={setFileName}
+            linearGradient={linearGradient}
+            setLinearGradient={setLinearGradient}
+            backgroundImage={backgroundImage}
+            setBackgroundImage={setBackgroundImage}
+            subActiveTab={subActiveTab}
+            setSubActiveTab={setSubActiveTab}
+        />
+      </div>
   )
 }
 
 
-const ThumbnailComponent = () => {
+const ThumbnailComponent = ({
+  paddingValue, 
+  imageScale, 
+  imageBorder,
+  imageShadow,
+  imageTransform,
+  imagePosition,
+  filters,
+  linearGradient,
+  backgroundImage,
+  subActiveTab
+}:
+  ThumbnailComponentProps
+) => {
   const [showWatermark, setShowWatermark] = useState(true);
   const [watermarkStyle, setWatermarkStyle] = useState('dark');
   const [watermarkText, setWatermarkText] = useState('ToolsArsenal');
@@ -65,53 +203,113 @@ const ThumbnailComponent = () => {
     ResetState()
   }
   return (
-    <div className="flex flex-col items-center justify-center py-4 sm:max-w-[60%] md:w-[70%]">
-      <div className="relative flex items-center justify-center p-12 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500 shadow-lg w-full sm:w-[70%] md:max-w-[60%] aspect-video h-[350px]">
+    <div className="flex flex-col  items-center justify-center py-4 w-full">
+      <div
+        id="ss"
+        className="shadow-lg sm:max-w-[50%] md:max-w-[60%]"
+        style={{
+          padding: imagePosition,
+          margin: '0px',
+          background: subActiveTab === 'Gradient' ? linearGradient : `url(/test${backgroundImage}.webp) 0% 0%`,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          aspectRatio: '1/1',
+          filter:
+            `brightness(${filters.brightness}) contrast(${filters.contrast}) grayscale(${filters.grayscale}) blur(${filters.blur}px) hue-rotate(${filters.hueRotate}deg) invert(${filters.invert}) opacity(${filters.opacity}) saturate(${filters.saturate}) sepia(${filters.sepia})`,
+          overflow: 'hidden',
+          opacity: '1',
+          scrollMargin: '0px',
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
       {
         isLoading ? (
-        <div className="bg-white dark:bg-black p-4 rounded-lg w-full shadow-md transform perspective-500 hover:rotate-y-1 hover:rotate-x-1 transition-transform duration-300">
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="url-input" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          <div
+          id="imgdiv"
+          style={{
+            display: 'grid',
+            borderRadius: '1px',
+            boxShadow: 'rgb(60, 58, 58) 0px 4px 20px 0px',
+            position: 'relative',
+            transform: 'perspective(500px) rotateY(0deg) rotateX(0deg)',
+            overflow: 'hidden',
+            scale: `${imageScale}`,
+            transition: 'all 0.25s ease 0s',
+          }}
+        >
+          <div className="bg-white dark:bg-black p-4 rounded-lg min-w-[300px]">
+            <label
+              htmlFor="small-input"
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >
               Enter URL here
             </label>
-            <Input
+            <input
+              name="title"
+              placeholder="Paste youtube video URL here"
               type="text"
-              id="url-input"
+              id="default-input"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="Paste youtube video URL here"
               className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm rounded-lg block w-full p-2.5 mb-4"
             />
-            <div className="flex justify-end">
-            <Button className="text-sm bg-gray-900 text-white font-semibold px-4 py-2 rounded-md hover:bg-gray-800 transition-colors ml-auto"
-            >
+            <button className="text-sm bg-[#121212] text-white font-semibold px-4 py-1 rounded-md" type="submit" onClick={handleSubmit}>
               Get thumbnail
-            </Button>
-            </div>
-            
-          </form>
+            </button>
+          </div>
         </div>
         ) : (
-        <div 
-          id="imgdiv" 
-          className="grid rounded shadow-lg shadow-[#3c3a3a] relative transform perspective-500 rotate-y-0 rotate-x-0 overflow-hidden scale-100 transition-all duration-250"
+          <div
+          id="imgdiv"
+          style={{
+            display: 'grid',
+            borderRadius: `${imageBorder}px`,
+            boxShadow: `rgb(60, 58, 58) 0px 4px ${imageShadow}px 0px`,
+            position: 'relative',
+            transform: imageTransform,
+            overflow: 'hidden',
+            scale: `${imageScale}`,
+            transition: 'all 0.25s ease 0s',
+          }}
         >
-          <div className="bg-white font-sans text-black rounded border-t-0 border-r-0 border-l-0 overflow-hidden w-full">
-            <input 
-              name="photo" 
-              type="file" 
-              accept="image/png, image/jpg, image/jpeg, image/jfif" 
-              className="hidden"
+          <div
+            style={{
+              backgroundColor: 'rgb(255, 255, 255)',
+              fontFamily: 'sans-serif',
+              color: 'rgb(0, 0, 0)',
+              borderRadius: '1px',
+              borderTopWidth: 'medium',
+              borderRightWidth: 'medium',
+              borderLeftWidth: 'medium',
+              borderTopStyle: 'none',
+              borderRightStyle: 'none',
+              borderLeftStyle: 'none',
+              borderTopColor: 'currentcolor',
+              borderRightColor: 'currentcolor',
+              borderLeftColor: 'currentcolor',
+              borderImage: 'none',
+              overflow: 'hidden',
+              width: '100%',
+            }}
+          >
+            <input
+              name="photo"
+              type="file"
+              accept="image/png, image/jpg, image/jpeg, image/jfif"
+              style={{ display: 'none' }}
             />
             <div>
-              <img 
-                className="w-full h-full object-cover"
-                alt="thumbnail" 
+              <img
+                alt="thumbnail"
                 src={url}
               />
             </div>
           </div>
         </div>
+        
       )
       }
 
@@ -176,19 +374,47 @@ const ThumbnailComponent = () => {
   );
 };
 
-interface EditorSidebarProps {
-    text?: string
-}
 
-const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
+
+const EditorSidebar = ({ 
+  text, 
+  paddingValue, 
+  setPaddingValue, 
+  imageScale, 
+  setImageScale, 
+  imageBorder, 
+  setImageBorder,
+  imageShadow,
+  setImageShadow,
+  imageTransform,
+  setImageTransform,
+  imagePosition,
+  setImagePosition,
+  filters,
+  setFilters,
+  fileName,
+  setFileName,
+  linearGradient,
+  setLinearGradient,
+  backgroundImage,
+  setBackgroundImage,
+  subActiveTab,
+  setSubActiveTab
+}: EditorSidebarProps) => {
+  const [ResetDialog, confirm] = useConfirm(
+    'Reset',
+    'Are you sure you want to reset? Changes are irreversible.'
+  )
+
   const [showWatermark, setShowWatermark] = useState(true);
   const [frame, setFrame] = useState('none');
   const [color, setColor] = useState('#000000');
   const [background, setBackground] = useState('#FFFFFF');
-  const [activeTabs, setActiveTabs] = useState<ActiveTabs>('Settings')
+  const [activeTabs, setActiveTabs] = useState<ActiveTabs>('Edit')
   const [subActiveTabs, setSubActiveTabs] = useState<SubActiveTabs>('Gradient')
   const [selectedGradient, setSelectedGradient] = useState<string>(Gradients[0])
   const [selectedSolidColor, setSelectedSolidColor] = useState<string>(PlainColors[0])
+  const [selectedImage, setSelectedImage] = useState<number>(1)
 
   // extract rgb values from gradient
   function extractRGBValues(gradient:string) {
@@ -199,13 +425,48 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
   const handleRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Handle range input changes
   };
-
+  const handleGradientChange = (gradient: string) => {
+    setSelectedGradient(gradient);
+    setLinearGradient(gradient);
+  };
   const handleFrameChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFrame(e.target.value);
   };
+  const handleTransform = (index: number) => {
+    if(imageTransform === Transform[index]) {
+      setImageTransform(initialTransform);
+    }
+    else setImageTransform(Transform[index]);
+  };
+  const handlePosition = (index: number) => {
+    if(imagePosition === Position[index]) {
+      setImagePosition(initialPosition);
+    }
+    else setImagePosition(Position[index]);
+  };
 
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters({ ...filters, [name]: value });
+  };
+  const handleReset = async () => {
+    const ok = await confirm();
+    if(ok) {
+      setFilters(initialFilters as Filters);
+      setFileName(initialFileName);
+    }else return;
+  };
+  const handleSubActiveTabChange = (tab: SubActiveTabs) => {
+    setSubActiveTab(tab);
+    setSubActiveTabs(tab);
+  };
+  const handleImageChange = (num: number) => {
+    setBackgroundImage(num);
+    setSelectedImage(num);
+  }
   return (
-      <div id="rightAside" className="w-full justify-center items-center md:justify-normal sm:max-w-[340px] md:w-full bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
+    <div id="rightAside" className="w-full justify-center items-center md:justify-normal sm:max-w-[340px] md:w-full bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
+      <ResetDialog />
         <div className="w-full flex flex-row items-center justify-between rounded-t-xl p-2 text-xs font-medium border bg-gray-50 dark:bg-[#0f0f0f] dark:border-gray-950">
           <p className={cn("px-4 text-center py-2 rounded-lg cursor-pointer dark:bg-[#1a1a1a] font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Settings' && 'bg-white px-4 shadow-md')}
               onClick={() => setActiveTabs('Settings')}
@@ -265,39 +526,39 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
               <div className="my-8">
                 <div className="flex items-center text-xs mb-2 mt-4 font-medium">
                   <label className="flex-shrink-0 w-20">Brightness:</label>
-                  <input name="brightness" className="range accent-gray-600" type="range" min="0" max="2" step="0.1" value="1"/>
+                  <input name="brightness" className="range accent-gray-600" type="range" min="0" max="2" step="0.1" value={filters.brightness} onChange={handleFilterChange}/>
                 </div>
                 <div className="flex items-center text-xs mb-2 mt-4 font-medium">
                   <label className="flex-shrink-0 w-20">Contrast:</label>
-                  <input name="contrast" className="range accent-gray-600" type="range" min="0" max="2" step="0.1" value="1"/>
+                  <input name="contrast" className="range accent-gray-600" type="range" min="0" max="2" step="0.1" value={filters.contrast} onChange={handleFilterChange} />
                 </div>
                 <div className="flex items-center text-xs mb-2 mt-4 font-medium">
                   <label className="flex-shrink-0 w-20">Grayscale:</label>
-                  <input name="grayscale" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value="0"/>
+                  <input name="grayscale" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value={filters.grayscale} onChange={handleFilterChange} />
                 </div>
                 <div className="flex items-center text-xs mb-2 mt-4 font-medium">
                   <label className="flex-shrink-0 w-20">Blur:</label>
-                  <input name="blur" className="range accent-gray-600" type="range" min="0" max="10" step="0.5" value="0"/>
+                  <input name="blur" className="range accent-gray-600" type="range" min="0" max="10" step="0.5" value={filters.blur} onChange={handleFilterChange} />
                 </div>
                 <div className="flex items-center text-xs mb-2 mt-4 font-medium">
                   <label className="flex-shrink-0 w-20">Hue-rotate:</label>
-                  <input name="hueRotate" className="range accent-gray-600" type="range" min="0" max="360" step="10" value="0"/>
+                  <input name="hueRotate" className="range accent-gray-600" type="range" min="0" max="360" step="10" value={filters.hueRotate} onChange={handleFilterChange} />
                 </div>
                 <div className="flex items-center text-xs mb-2 mt-4 font-medium">
                   <label className="flex-shrink-0 w-20">Invert:</label>
-                  <input name="invert" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value="0"/>
+                  <input name="invert" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value={filters.invert} onChange={handleFilterChange} />
                 </div>
                 <div className="flex items-center text-xs mb-2 mt-4 font-medium">
                   <label className="flex-shrink-0 w-20">Opacity:</label>
-                  <input name="opacity" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value="1"/>
+                  <input name="opacity" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value={filters.opacity} onChange={handleFilterChange} />
                 </div>
                   <div className="flex items-center text-xs mb-2 mt-4 font-medium">
                   <label className="flex-shrink-0 w-20">Saturate:</label>
-                  <input name="saturate" className="range accent-gray-600" type="range" min="0" max="2" step="0.1" value="1"/>
+                  <input name="saturate" className="range accent-gray-600" type="range" min="0" max="2" step="0.1" value={filters.saturate} onChange={handleFilterChange} />
                 </div>
                 <div className="flex items-center text-xs mb-2 mt-4 font-medium">
                   <label className="flex-shrink-0 w-20">Sepia:</label>
-                  <input name="sepia" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value="0"/>
+                  <input name="sepia" className="range accent-gray-600" type="range" min="0" max="1" step="0.1" value={filters.sepia} onChange={handleFilterChange} />
                 </div>
               </div>
               <div className="flex items-center text-sm mb-4 mt-4">
@@ -306,9 +567,11 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
                   <path d="M369.9 97.9L286 14C277 5 264.8-.1 252.1-.1H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V131.9c0-12.7-5.1-25-14.1-34zM332.1 128H256V51.9l76.1 76.1zM48 464V48h160v104c0 13.3 10.7 24 24 24h104v288H48z"/>
                 </svg>
                   <span className="mx-1">File Name</span>
-                <input type="text" className="outline-none border-b border-gray-400 bg-transparent text-black dark:text-white ml-1 text-xs" value="Picyard_1725021758978"/>
+                <input type="text" className="outline-none border-b border-gray-400 bg-transparent text-black dark:text-white ml-1 text-xs" value={fileName} onChange={(e) => setFileName(e.target.value)}/>
               </div>
-              <button className="flex items-center text-sm mt-2 px-4 py-2 rounded-lg font-medium border border-gray-700 bg-white dark:bg-black text-black dark:text-white hover:bg-gray-100 dark:hover:bg-[#121212]" type="button">
+              <button className="flex items-center text-sm mt-2 px-4 py-2 rounded-lg font-medium border border-gray-700 bg-white dark:bg-black text-black dark:text-white hover:bg-gray-100 dark:hover:bg-[#121212]" type="button"
+                onClick={handleReset}
+              >
                 Reset 
                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
                 <title>Reset</title>
@@ -317,6 +580,7 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
                 </svg>
               </button>
             </div>
+
           )
         }
         {
@@ -324,37 +588,39 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
             <>
               <div className="p-4 my-2 rounded-xl text-sm">
               <div>
-                <div style={{display: "flex; align-items: flex-start; margin-bottom: 24px;"}}>
-                  <div className="flex items-center cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl mr-4">
+                <div className="flex flex-row justify-between">
+                  <div className="flex items-center cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl mr-4 w-[45%]">
                     <span>Color</span>
                     <span className="h-4 w-4 rounded-full ml-1 border border-gray-400" style={{backgroundColor: "rgb(0, 0, 0)"}}/>
                   </div>
-                  <div className="flex items-center cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl">
+                  <div className="flex items-center w-[45%] cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl">
                     <span>Background</span>
                     <span className="h-4 w-4 rounded-full ml-1 border border-gray-400" style={{backgroundColor: "rgb(255, 255, 255)"}}/>
                   </div>
                 </div>
-                <div style={{display: "flex; justify-content: space-evenly; align-items: flex-start;"}}>
-                  <div style={{display: "flex; flex-direction: column; width: 100%;"}}>
+                <div className="flex flex-row justify-between align-center mt-4">
+                <div className="flex flex-col items-center justify-center w-[70%]">
+                  <div className="flex flex-col items-start justify-center">
                     <div style={{fontSize: "12px", marginBottom: "8px", fontWeight: "500", display: "flex", alignItems: "center", width: "100%"}}>
                       <span className="mr-2 md:mr-0" style={{flex: "1 1 0%"}}>Round</span>
-                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0" max="60" step="1" id="roundness" value="1" />
+                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0" max="60" step="1" id="roundness" value={imageBorder} onChange={(e) => setImageBorder(Number(e.target.value))} />
                     </div>
                     <div style={{fontSize: "12px", marginBottom: "8px", fontWeight: "500", display: "flex", alignItems: "center"}}>
                       <span className="mr-2 md:mr-0" style={{flex: "1 1 0%"}}>Shadow</span>
-                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0" max="100" step="1" id="shadow" value="20" />
+                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0" max="100" step="1" id="shadow" value={imageShadow} onChange={(e) => setImageShadow(Number(e.target.value))} />
                     </div>
                     <div style={{fontSize: "12px", marginBottom: "8px", fontWeight: "500", display: "flex", alignItems: "center"}}>
                       <span className="mr-2 md:mr-0" style={{flex: "1 1 0%"}}>Padding</span>
-                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0" max="10" step="0.5" id="pdng" value="3" />
+                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0" max="10" step="1" id="pdng" value={paddingValue} onChange={(e) => setPaddingValue(Number(e.target.value))} />
                     </div>
                     <div style={{fontSize: "12px", marginBottom: "8px", fontWeight: "500", display: "flex", alignItems: "center"}}>
                       <span className="mr-2 md:mr-0" style={{flex: "1 1 0%"}}>Scale</span>
-                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0.15" max="2" step="0.1" id="scale" value="1" />
+                      <input className="range accent-gray-600 mx-4 w-2/4" type="range" min="0.15" max="2" step="0.1" id="scale" value={imageScale} onChange={(e) => setImageScale(Number(e.target.value))} />
                     </div>
-                  </div>
-                  <div className="flex flex-col items-center border-l border-gray-400 px-4 py-2">
-                    <span className="flex-1 font-medium px-3 py-1 mb-2 rounded-full border border-gray-600 cursor-pointer select-none text-sm bg-gray-100 dark:bg-[#1a1a1a]">
+                  </div> 
+                </div>  
+                <div className="flex flex-col items-center border-l border-gray-400 px-4 py-2 w-[28%]">
+                    <span className="flex-1 font-medium px-3 py-1 mb-2 rounded-full border border-gray-600 cursor-pointer select-none text-sm bg-gray-100 dark:bg-[#1a1a1a] my-auto">
                       Tilt
                     </span>
                     <div>
@@ -363,7 +629,7 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
                       </div>
                     </div>
                   </div>
-                </div>  
+                </div>
                 <div className="flex-wrap" style={{display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "8px"}}>
                   <h6 className="flex items-center text-sm font-medium">
                     Frame
@@ -391,38 +657,43 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
             <div className="p-4 mt-4 rounded-xl text-sm w-full">
               <div className="flex overflow-x-auto scroll-m-0 scrollbar-none">
                 {[...Array(11)].map((_, index) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-      <div key={index} className="flex-shrink-0 w-20 h-20 mr-2 rounded-sm" style={{
-                    background: 'linear-gradient(135deg, #FF002C, #FF0057, #FF0082, #FF00AD, #FF00D8, #C100FF, #8900FF, #5900FF, #2400FF)',
-                    backgroundSize: 'cover',
+                  <div 
+                  key={index} 
+                    className={cn("flex-shrink-0 w-20 h-20 mr-2 rounded-sm", imageTransform === Transform[index] && 'border-[1px] border-black')} 
+                    style={{
+                      background: 'linear-gradient(135deg, #FF002C, #FF0057, #FF0082, #FF00AD, #FF00D8, #C100FF, #8900FF, #5900FF, #2400FF)',
+                      backgroundSize: 'cover',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     filter: 'brightness(1) contrast(1) grayscale(0) blur(0px) hue-rotate(0deg) invert(0) opacity(1) saturate(1) sepia(0)',
                     opacity: 1
-                  }}>
+                  }}
+                    onClick={() => handleTransform(index)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setImageTransform(Transform[index]);
+                      }
+                    }}
+                  >
                     <div className="w-12 h-12 bg-slate-50 border" style={{
-                      transform: [
-                        'perspective(400em) rotateY(-15deg) rotateX(6deg) skew(-8deg,4deg) translate3d(-4%,-2%,0)',
-                        'rotate(-8deg)',
-                        'perspective(400em) rotateY(15deg) rotateX(6deg) skew(8deg, -4deg) translate3d(4%, -2%, 0)',
-                        'translateY(-4%) perspective(400em) rotateX(18deg)',
-                        'perspective(400em) translate3d(0, -6%, 0) rotateX(34deg)',
-                        'rotateX(40deg) rotate(40deg)',
-                        'perspective(900px) rotateZ(-15deg) rotateY(10deg) skew(10deg, -5deg) translate3d(10%, 5%, 0)',
-                        'perspective(800px) rotateY(20deg) rotateX(-15deg) skew(-10deg, 5deg) translate3d(-10%, -5%, 0)',
-                        'perspective(700px) rotateX(-20deg) rotateZ(15deg) skew(5deg, -10deg) translate3d(5%, 10%, 0)',
-                        'perspective(500px) rotateY(-20deg) rotateX(10deg) skew(10deg, -5deg) translate3d(10%, 5%, 0)',
-                        'perspective(600px) rotateZ(15deg) rotateY(-10deg) skew(-5deg, 10deg) translate3d(-5%, -10%, 0)'
-                      ][index]
-                    }}/>
+                      transform: Transform[index]
+                    }}
+                    />
                   </div>
                 ))}
               </div>
               <div className="flex justify-center mt-4">
                 <div className="grid grid-cols-3 w-fit">
-                  {[...Array(9)].map((_, index) => (
-                    <div key={index} className="w-16 h-10 m-1 rounded bg-slate-200 dark:bg-slate-700"/>
+                  {Position.map((position, index) => (
+                    <div key={index} className={cn("w-16 h-10 m-1 rounded bg-slate-200 dark:bg-slate-700", imagePosition === position && 'border-[1px] border-black')}
+                      onClick={() => handlePosition(index)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          setImagePosition(Position[index]);
+                        }
+                      }}
+                    />
                   ))}
                 </div>
               </div>
@@ -436,30 +707,30 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
                 {/* sub menu */}
                 <div className="w-full flex flex-row items-center justify-between rounded-b-xl p-2 text-xs font-medium border bg-gray-50 dark:bg-[#0f0f0f] dark:border-gray-950">
                   <p className={cn("w-full text-center py-2 rounded-[10px] cursor-pointer  font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] ", subActiveTabs === 'Gradient' && 'bg-white dark:bg-[#1a1a1a] shadow-md')}
-                    onClick={() => setSubActiveTabs('Gradient')}
+                    onClick={() => handleSubActiveTabChange('Gradient')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        setSubActiveTabs('Gradient');
+                        handleSubActiveTabChange('Gradient');
                       }
                     }}
                   >
                     Gradient
                   </p>
                   <p className={cn("w-full text-center py-2 rounded-[10px] cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", subActiveTabs === 'Image' && 'bg-white dark:bg-[#1a1a1a] shadow-md')}
-                    onClick={() => setSubActiveTabs('Image')}
+                    onClick={() => handleSubActiveTabChange('Image')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        setSubActiveTabs('Image');
+                        handleSubActiveTabChange('Image');
                       }
                     }}
                   >
                     Image
                   </p>
                   <p className={cn("w-full text-center py-2 rounded-[10px] cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", subActiveTabs === 'Solid' && 'bg-white dark:bg-[#1a1a1a] shadow-md')}
-                    onClick={() => setSubActiveTabs('Solid')}
+                    onClick={() => handleSubActiveTabChange('Solid')}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        setSubActiveTabs('Solid');
+                        handleSubActiveTabChange('Solid');
                       }
                     }}
                   >
@@ -471,10 +742,15 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
               {
                 subActiveTabs === 'Gradient' && (
                   <>
+                    <Input
+                      type="Color"
+                      className="w-full h-10"
+                    />
                     <div className="flex mt-3">
                       {
                         extractRGBValues(selectedGradient)?.map((color, index) => (
-                            <span style={{background: color, height: "30px", width: "30px", margin: "4px", borderRadius: "4px", border: "1px solid gray", position: "relative"}} key={index}>
+                            <span style={{background: color, height: "30px", width: "30px", margin: "4px", borderRadius: "4px", border: "1px solid gray", position: "relative"}} key={index}
+                            >
                             <span className="absolute -top-2 -right-1 bg-white dark:bg-[rgb(5,50,50)] flex justify-center items-center rounded-full p-1">
                               <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                               <title>whatever</title>
@@ -490,10 +766,10 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
                       {
                         Gradients.map((gradient, index) => (
                           <span className={cn("block h-8 w-8 m-1 rounded-md border border-gray-400 cursor-pointer", selectedGradient === gradient && 'border-1 rounded-full')} style={{background: gradient}} key={index}
-                            onClick={() => setSelectedGradient(gradient)}
+                            onClick={() => handleGradientChange(gradient)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
-                                setSelectedGradient(gradient);
+                                handleGradientChange(gradient);
                               }
                             }}
 
@@ -510,13 +786,20 @@ const EditorSidebar: React.FC<EditorSidebarProps> = ({ text }) => {
               {
                 subActiveTabs === 'Image' && (
                   <>
-                  <div className="flex w-full flex-wrap max-h-[20vh] md:max-h-[40vh] overflow-y-scroll scroll-m-0 justify-center bg-white dark:bg-[#0f0f0f] dark:border-gray-700 border-gray-300 rounded-xl mt-2 p-1">
+                  <div className="flex w-full flex-wrap max-h-[20vh] md:max-h-[40vh] overflow-y-scroll scroll-m-0 justify-center bg-white dark:bg-[#0f0f0f] dark:border-gray-700 border-gray-300 rounded-xl mt-2 p-1"
+                  >
                     {Array.from({ length: 70 }, (_, i) => i + 1).map((number) => (
                       <img 
                         key={number}
                         src={`/test${number}.webp`}
                         alt={`bg ${number}`}
-                        className="h-12 w-12 m-1 aspect-square rounded-sm"
+                        className={cn("h-12 w-12 m-1 aspect-square rounded-sm object-cover", selectedImage === number && ' rounded-full')}
+                        onClick={() => handleImageChange(number)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            handleImageChange(number);
+                          }
+                        }}
                       />
                     ))}
                   </div>
