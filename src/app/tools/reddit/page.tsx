@@ -173,6 +173,9 @@ const ThumbnailComponent = ({
   const [selfText, setSelfText] = useState<string | null>(null)
   const [selfTitle, setSelfTitle] = useState<string | null>(null)
   const [selfImage, setSelfImage] = useState<string | null>(null)
+  const [redditUserImage, setRedditUserImage] = useState<string | null>(null)
+  const [redditUserName, setRedditUserName] = useState<string | null>(null)
+
 
   function decodeHtmlEntities(text: string): string {
     const textArea = document.createElement('textarea');
@@ -199,23 +202,57 @@ const ThumbnailComponent = ({
       }
 
       const data = await response.json();
+      const authorName = data[0]?.data?.children?.[0]?.data?.author
+      setRedditUserName(authorName)
 
-      console.log('Received data:', JSON.stringify(data, null, 2));
 
+      //finding post image, title, body
       if (data[0]?.data?.children?.[0]?.data?.selftext_html) {
         setSelfText(data[0].data.children[0].data.selftext_html);
         setSelfTitle(data[0].data.children[0].data.title)
       } else {
-        console.warn('Unexpected data structure:', JSON.stringify(data, null, 2));
         throw new Error('Unexpected data structure');
       }
-      if(data[0]?.data?.children?.[0]?.data?.url_overridden_by_dest) {
-        setSelfImage(data[0].data.children[0].data.url_overridden_by_dest)
+      let imageSet = false;
+      if(data[0]?.data?.children?.[0]?.data?.url && !data[0]?.data?.children?.[0]?.data?.url.includes('.jpg')) {
+        const imageUrl = data[0].data.children[0].data.url
+        console.log(imageUrl)
+        // Check if the URL is an image
+        const isImage = imageUrl.match(/\.(jpeg|jpg|gif|png)$/) !== null;
+        if (!isImage) {
+          imageSet = false;
+        }else {
+          setSelfImage(imageUrl)
+          imageSet = true;
+        }
       }else {
         console.warn('Unexpected data structure:', JSON.stringify(data, null, 2));
         throw new Error('Unexpected data structure');
       }
+      console.log('author')
+      if(!imageSet && data[0]?.data?.children?.[0]?.data?.gallery_data?.items?.[0]?.media_id ){
+        const mediaId = data[0]?.data?.children?.[0]?.data?.gallery_data?.items?.[0]?.media_id
+        const mainImageUrl = `https://preview.redd.it/${mediaId}.jpg?width=2304&format=pjpg&auto=webp&s=5de381c90edad53796cb35a489aaf574390536f1`
+        setSelfImage(mainImageUrl)
+        imageSet = true;
+      }
+      //finding author image
+      const response2 = await fetch('/api/media/redditAuthorImage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ author: authorName }),
+      });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data2 = await response2.json();
+      console.log(data2)
+      const authorImage = data2.data.snoovatar_img
+      setRedditUserImage(authorImage)
     } catch (error) {
       console.error('Error fetching Reddit data:', error);
       setError(true);
@@ -236,25 +273,8 @@ const ThumbnailComponent = ({
     toast.error("Error fetching thumbnail")
     ResetState()
   }
-  // const paddingOuter = Position2[imagePosition as keyof typeof Position2](paddingValue)
   return (
     <div className="flex flex-col  items-center justify-center py-4 w-full">
-        {selfTitle && (
-          <div className="text-lg font-semibold mb-2">
-            <h1>{selfTitle}</h1>
-          </div>
-        )}
-        {
-            selfImage && (
-                <img src={selfImage} alt="red" className="h-[300px] w-[300px]" />
-            )
-        }
-        {selfText && (
-        <div 
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-          dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(selfText) }}
-        />
-      )}
       <div
         id="ss"
         className="shadow-lg sm:max-w-[50%] md:max-w-[60%]"
@@ -334,6 +354,7 @@ const ThumbnailComponent = ({
           <div
             style={{
               backgroundColor: 'rgb(255, 255, 255)',
+              padding: '16px',
               fontFamily: 'sans-serif',
               color: 'rgb(0, 0, 0)',
               borderRadius: '1px',
@@ -354,16 +375,102 @@ const ThumbnailComponent = ({
             <input
               name="photo"
               type="file"
-              accept="image/png, image/jpg, image/jpeg, image/jfif"
+              accept="image/png, image/jpg, image/jpeg,image/jfif"
               style={{ display: 'none' }}
             />
-            <div>
-              <img
-                alt="thumbnail"
-                src={url}
-              />
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <img
+                  src={redditUserImage as string}
+                  alt="User avatar"
+                  style={{ width: '40px', height: '40px', borderRadius: '50%' }}
+                />
+                  <div
+                    style={{
+                      marginLeft: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      maxHeight: '40px',
+                      height: '15px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span
+                        contentEditable="true"
+                        style={{
+                          marginBottom: '0px',
+                          fontSize: '15px',
+                          fontWeight: '600',
+                          outline: 'currentcolor',
+                          border: 'medium',
+                          background: 'none',
+                          display: 'inline-block',
+                          boxSizing: 'border-box',
+                          width: '100%',
+                          height: '21px',
+                        }}
+                      >
+                        {redditUserName}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <img
+                    className="h-8 w-8"
+                    src="https://upload.wikimedia.org/wikipedia/en/thumb/b/bd/Reddit_Logo_Icon.svg/220px-Reddit_Logo_Icon.svg.png"
+                    alt=""
+                  />
+                </div>
+                </div>
+                <div style={{ padding: '4px' }}>
+                  <h3
+                    className="text-2xl font-solid"
+                    contentEditable="true"
+                    style={{
+                      outline: 'currentcolor',
+                      border: 'medium',
+                      margin: '12px 0px 0px',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      width: '100%',
+                    }}
+                  >
+                    {selfTitle}
+                  </h3>
+                  <p
+                    contentEditable="true"
+                    style={{
+                      outline: 'currentcolor',
+                      border: 'medium',
+                      margin: '12px 0px 0px',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      width: '100%',
+                    }}
+                  >
+                  {/* biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation> */}
+                  <div dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(selfText as string) }} />  
+                  </p>
+                  <div>
+                  <img
+                    alt="Comment"
+                    src={selfImage as string}
+                    style={{ marginTop: '8px' }}
+                  />
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
         
       )
