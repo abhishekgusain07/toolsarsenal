@@ -19,7 +19,6 @@ export async function GET(request: NextRequest, response: NextResponse) {
 }
 export async function POST(request: NextRequest) {
 
-    
   try {
     const { videoUrl } = await request.json();
 
