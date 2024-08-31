@@ -16,7 +16,7 @@ import { useConfirm } from "@/hooks/use-confirm"
 type ActiveTabs = 'Settings' | 'Edit' | 'Background';
 type SubActiveTabs = 'Gradient' | 'Image' | 'Solid';
 const initialTransform = 'perspective(500px) rotateY(0deg) rotateX(0deg)';
-const initialPosition = '3rem';
+const initialPosition = '1 1 1 1';
 const initialFileName = 'ToolsArsenal_2348239234';
 const initialLinearGradient = 'linear-gradient(135deg, rgb(255, 0, 44), rgb(255, 0, 87), rgb(255, 0, 130), rgb(255, 0, 173), rgb(255, 0, 216))';
 
@@ -133,7 +133,7 @@ export function YoutubeThumbnail() {
             setImageTransform={setImageTransform}
             imagePosition={imagePosition}
             setImagePosition={setImagePosition}
-            filters={filters}
+            filters={filters as Filters}
             setFilters={setFilters}
             fileName={fileName}
             setFileName={setFileName}
@@ -202,27 +202,29 @@ const ThumbnailComponent = ({
     toast.error("Error fetching thumbnail")
     ResetState()
   }
+  // const paddingOuter = Position2[imagePosition as keyof typeof Position2](paddingValue)
   return (
     <div className="flex flex-col  items-center justify-center py-4 w-full">
       <div
         id="ss"
         className="shadow-lg sm:max-w-[50%] md:max-w-[60%]"
         style={{
-          padding: imagePosition,
+          padding: (() => {
+            const value = paddingValue;
+            const [top, right, bottom, left] = imagePosition.split(' ');
+            return `${top === '0' ? '0rem' : top === '1' ? `${value}rem` : `${2 * value}rem`} ${right === '0' ? '0rem' : right === '1' ? `${value}rem` : `${2 * value}rem`} ${bottom === '0' ? '0rem' : bottom === '1' ? `${value}rem` : `${2 * value}rem`} ${left === '0' ? '0rem' : left === '1' ? `${value}rem` : `${2 * value}rem`}`;
+          })(),
           margin: '0px',
-          background: subActiveTab === 'Gradient' ? linearGradient : `url(/test${backgroundImage}.webp) 0% 0%`,
+          background: subActiveTab === 'Gradient' ? linearGradient : `url(/test${backgroundImage}.webp)`,
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          aspectRatio: '1/1',
           filter:
             `brightness(${filters.brightness}) contrast(${filters.contrast}) grayscale(${filters.grayscale}) blur(${filters.blur}px) hue-rotate(${filters.hueRotate}deg) invert(${filters.invert}) opacity(${filters.opacity}) saturate(${filters.saturate}) sepia(${filters.sepia})`,
           overflow: 'hidden',
           opacity: '1',
           scrollMargin: '0px',
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat'
         }}
       >
       {
@@ -234,7 +236,7 @@ const ThumbnailComponent = ({
             borderRadius: '1px',
             boxShadow: 'rgb(60, 58, 58) 0px 4px 20px 0px',
             position: 'relative',
-            transform: 'perspective(500px) rotateY(0deg) rotateX(0deg)',
+            transform: imageTransform,
             overflow: 'hidden',
             scale: `${imageScale}`,
             transition: 'all 0.25s ease 0s',
@@ -256,7 +258,11 @@ const ThumbnailComponent = ({
               onChange={(e) => setUrl(e.target.value)}
               className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm rounded-lg block w-full p-2.5 mb-4"
             />
-            <button className="text-sm bg-[#121212] text-white font-semibold px-4 py-1 rounded-md" type="submit" onClick={handleSubmit}>
+            <button 
+              className="text-sm bg-[#121212] text-white font-semibold px-4 py-1 rounded-md" 
+              type="button" 
+              onClick={(e) => handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)}
+            >
               Get thumbnail
             </button>
           </div>
@@ -442,7 +448,9 @@ const EditorSidebar = ({
     if(imagePosition === Position[index]) {
       setImagePosition(initialPosition);
     }
-    else setImagePosition(Position[index]);
+    else {
+      setImagePosition(Position[index])
+    }
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -658,7 +666,8 @@ const EditorSidebar = ({
               <div className="flex overflow-x-auto scroll-m-0 scrollbar-none">
                 {[...Array(11)].map((_, index) => (
                   <div 
-                  key={index} 
+                    // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                    key={index} 
                     className={cn("flex-shrink-0 w-20 h-20 mr-2 rounded-sm", imageTransform === Transform[index] && 'border-[1px] border-black')} 
                     style={{
                       background: 'linear-gradient(135deg, #FF002C, #FF0057, #FF0082, #FF00AD, #FF00D8, #C100FF, #8900FF, #5900FF, #2400FF)',
@@ -686,11 +695,11 @@ const EditorSidebar = ({
               <div className="flex justify-center mt-4">
                 <div className="grid grid-cols-3 w-fit">
                   {Position.map((position, index) => (
-                    <div key={index} className={cn("w-16 h-10 m-1 rounded bg-slate-200 dark:bg-slate-700", imagePosition === position && 'border-[1px] border-black')}
+                    <div key={position} className={cn("w-16 h-10 m-1 rounded bg-slate-200 dark:bg-slate-700", imagePosition === position && 'border-[1px] border-black')}
                       onClick={() => handlePosition(index)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
-                          setImagePosition(Position[index]);
+                          handlePosition(index);
                         }
                       }}
                     />
@@ -749,7 +758,7 @@ const EditorSidebar = ({
                     <div className="flex mt-3">
                       {
                         extractRGBValues(selectedGradient)?.map((color, index) => (
-                            <span style={{background: color, height: "30px", width: "30px", margin: "4px", borderRadius: "4px", border: "1px solid gray", position: "relative"}} key={index}
+                            <span style={{background: color, height: "30px", width: "30px", margin: "4px", borderRadius: "4px", border: "1px solid gray", position: "relative"}} key={color}
                             >
                             <span className="absolute -top-2 -right-1 bg-white dark:bg-[rgb(5,50,50)] flex justify-center items-center rounded-full p-1">
                               <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
@@ -765,7 +774,7 @@ const EditorSidebar = ({
                     <div className="flex w-full flex-wrap max-h-[20vh] md:max-h-[40vh] overflow-y-scroll scroll-m-0 justify-center bg-white dark:bg-[#0f0f0f] dark:border-gray-700 border-gray-300 rounded-xl mt-2 p-1">
                       {
                         Gradients.map((gradient, index) => (
-                          <span className={cn("block h-8 w-8 m-1 rounded-md border border-gray-400 cursor-pointer", selectedGradient === gradient && 'border-1 rounded-full')} style={{background: gradient}} key={index}
+                          <span className={cn("block h-8 w-8 m-1 rounded-md border border-gray-400 cursor-pointer", selectedGradient === gradient && 'border-1 rounded-full')} style={{background: gradient}} key={gradient}
                             onClick={() => handleGradientChange(gradient)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
@@ -813,7 +822,7 @@ const EditorSidebar = ({
                   <div className="flex w-full flex-wrap max-h-[20vh] md:max-h-[40vh] overflow-y-scroll scroll-m-0 justify-center bg-white dark:bg-[#0f0f0f] dark:border-gray-700 border-gray-300 rounded-xl mt-2 p-1">
                       {
                         PlainColors.map((plainColor, index) => (
-                          <span className={cn("block h-8 w-8 m-1 rounded-md border border-gray-400 cursor-pointer", selectedSolidColor === plainColor && 'border-1 rounded-full')} style={{background: plainColor}} key={index}
+                          <span className={cn("block h-8 w-8 m-1 rounded-md border border-gray-400 cursor-pointer", selectedSolidColor === plainColor && 'border-1 rounded-full')} style={{background: plainColor}} key={plainColor}
                             onClick={() => setSelectedSolidColor(plainColor)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {

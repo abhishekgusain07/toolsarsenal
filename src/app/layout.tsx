@@ -18,8 +18,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
         <ToastContainer />
+        <div className="h-screen scrollbar-hide">
+          {children}
+        </div>
       </body>
     </html>
   );
