@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     const { RedditUrl } = await request.json();
     const content = extractRedditPath(RedditUrl);
-
+    console.log(content)
     if (!content) {
         return NextResponse.json({ error: 'No content found' }, { status: 404 });
     }

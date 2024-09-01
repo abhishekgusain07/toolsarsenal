@@ -13,6 +13,7 @@ import { Transform } from "@/constants/transform"
 import { Position } from "@/constants/constant"
 import { useConfirm } from "@/hooks/use-confirm"
 
+type RequestType = 'post' | 'comment'
 type ActiveTabs = 'Settings' | 'Edit' | 'Background';
 type SubActiveTabs = 'Gradient' | 'Image' | 'Solid';
 const initialTransform = 'perspective(500px) rotateY(0deg) rotateX(0deg)';
@@ -175,7 +176,7 @@ const ThumbnailComponent = ({
   const [selfImage, setSelfImage] = useState<string | null>(null)
   const [redditUserImage, setRedditUserImage] = useState<string | null>(null)
   const [redditUserName, setRedditUserName] = useState<string | null>(null)
-
+  const [requestType, setRequestType] = useState<RequestType>('post')
 
   function decodeHtmlEntities(text: string): string {
     const textArea = document.createElement('textarea');
@@ -183,11 +184,11 @@ const ThumbnailComponent = ({
     return textArea.value;
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, type: RequestType) => {
     e.preventDefault();
     setIsLoading(true);
     setError(false);
-
+    setRequestType(type)
     try {
       const response = await fetch('/api/media/reddit', {
         method: 'POST',
@@ -202,18 +203,23 @@ const ThumbnailComponent = ({
       }
 
       const data = await response.json();
-      const authorName = data[0]?.data?.children?.[0]?.data?.author
+      const authorName = type === 'post' ? data[0]?.data?.children?.[0]?.data?.author : data[1]?.data?.children?.[0]?.data?.author
       setRedditUserName(authorName)
-
 
       //finding post image, title, body
       if (data[0]?.data?.children?.[0]?.data?.selftext_html) {
-        setSelfText(data[0].data.children[0].data.selftext_html);
-        setSelfTitle(data[0].data.children[0].data.title)
+        if(type === 'post') {
+          setSelfText(data[0].data.children[0].data.selftext_html);
+          setSelfTitle(data[0].data.children[0].data.title)
+        }else {
+          setSelfText(data[1].data.children[0].data.body_html);
+          setSelfTitle('')
+        }
       } else {
         throw new Error('Unexpected data structure');
       }
       let imageSet = false;
+      if(type === 'post') {
       if(data[0]?.data?.children?.[0]?.data?.url && !data[0]?.data?.children?.[0]?.data?.url.includes('.jpg')) {
         const imageUrl = data[0].data.children[0].data.url
         console.log(imageUrl)
@@ -227,32 +233,15 @@ const ThumbnailComponent = ({
         }
       }else {
         console.warn('Unexpected data structure:', JSON.stringify(data, null, 2));
-        throw new Error('Unexpected data structure');
-      }
-      console.log('author')
+          throw new Error('Unexpected data structure');
+        }
       if(!imageSet && data[0]?.data?.children?.[0]?.data?.gallery_data?.items?.[0]?.media_id ){
         const mediaId = data[0]?.data?.children?.[0]?.data?.gallery_data?.items?.[0]?.media_id
         const mainImageUrl = `https://preview.redd.it/${mediaId}.jpg?width=2304&format=pjpg&auto=webp&s=5de381c90edad53796cb35a489aaf574390536f1`
         setSelfImage(mainImageUrl)
         imageSet = true;
       }
-      //finding author image
-      const response2 = await fetch('/api/media/redditAuthorImage', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ author: authorName }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data2 = await response2.json();
-      console.log(data2)
-      const authorImage = data2.data.snoovatar_img
-      setRedditUserImage(authorImage)
+    }
     } catch (error) {
       console.error('Error fetching Reddit data:', error);
       setError(true);
@@ -321,21 +310,31 @@ const ThumbnailComponent = ({
             </label>
             <input
               name="title"
-              placeholder="Paste youtube video URL here"
+              placeholder="Paste Reddit URL here"
               type="text"
               id="default-input"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm rounded-lg block w-full p-2.5 mb-4"
+              className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm rounded-lg block w-full p-2.5 mb-1"
             />
-            <button 
-              className="text-sm bg-[#121212] text-white font-semibold px-4 py-1 rounded-md" 
-              type="button" 
-              onClick={(e) => handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)}
-            >
-              Get thumbnail
-            </button>
-          </div>
+            <p className="text-xs text-muted-foreground mb-3 font-semibold">Browser Urls only</p>
+              <div className="flex flex-row gap-[10px]">
+                <button 
+                  className="text-sm bg-[#121212] text-white font-semibold px-4 py-1 rounded-md" 
+                  type="button" 
+                  onClick={(e) => handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>, 'post')}
+                >
+                  Get Post
+                </button>
+                <button 
+                  className="text-sm bg-[#121212] text-white font-semibold px-4 py-1 rounded-md" 
+                  type="button" 
+                  onClick={(e) => handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>, 'comment')}
+                >
+                  Get Comment
+                </button>
+              </div>
+            </div>
         </div>
         ) : (
           <div
@@ -387,11 +386,12 @@ const ThumbnailComponent = ({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <img
-                  src={redditUserImage as string}
-                  alt="User avatar"
-                  style={{ width: '40px', height: '40px', borderRadius: '50%' }}
-                />
+                <p className="text-3xl text-muted-foreground">{redditUserImage}</p>
+                  <img
+                    src="https://i.redd.it/snoovatar/avatars/d58374b7-bbe1-47ff-8132-20ff040f6c82.png"
+                    alt="user avatar"
+                    style={{ width: '40px', height: '40px', borderRadius: '50%'}}
+                  />
                   <div
                     style={{
                       marginLeft: '12px',
@@ -462,6 +462,7 @@ const ThumbnailComponent = ({
                   {/* biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation> */}
                   <div dangerouslySetInnerHTML={{ __html: decodeHtmlEntities(selfText as string) }} />  
                   </p>
+                  {requestType === 'post' && selfImage && (
                   <div>
                   <img
                     alt="Comment"
@@ -469,6 +470,7 @@ const ThumbnailComponent = ({
                     style={{ marginTop: '8px' }}
                   />
                     </div>
+                  )}
                 </div>
             </div>
         </div>

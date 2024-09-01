@@ -5,7 +5,13 @@ meta {
 }
 
 get {
-  url: 
-  body: none
+  url: http://localhost:3000/api/media/reddit
+  body: json
   auth: none
+}
+
+body:json {
+  {
+    "RedditUrl":"https://www.reddit.com/r/webdev/comments/1f6epwk/need_some_feedback_on_my_first_resume/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button"
+  }
 }
