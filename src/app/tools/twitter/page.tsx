@@ -1,7 +1,6 @@
 'use client'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useMutation } from "@tanstack/react-query"
@@ -12,6 +11,10 @@ import { PlainColors } from "@/constants/plainColors"
 import { Transform } from "@/constants/transform"
 import { Position } from "@/constants/constant"
 import { useConfirm } from "@/hooks/use-confirm"
+import extractTweetId, { convertDateFormat, convertViews } from "./helper"
+import { Rettiwt, type Tweet } from "rettiwt-api"
+import TweetPage from "./tweet"
+import ToggleSwitch from "@/components/ui/toggle"
 
 type ActiveTabs = 'Settings' | 'Edit' | 'Background';
 type SubActiveTabs = 'Gradient' | 'Image' | 'Solid';
@@ -19,10 +22,6 @@ const initialTransform = 'perspective(500px) rotateY(0deg) rotateX(0deg)';
 const initialPosition = '1 1 1 1';
 const initialFileName = 'ToolsArsenal_2348239234';
 const initialLinearGradient = 'linear-gradient(135deg, rgb(255, 0, 44), rgb(255, 0, 87), rgb(255, 0, 130), rgb(255, 0, 173), rgb(255, 0, 216))';
-const heartFilled = '#F91880'
-const heartEmpty = 'white'
-const heartFilledBg = '#F91880'
-const heartEmptyBg = 'white'
 
 const initialFilters: Partial<Filters> = {
   brightness: 1,
@@ -68,6 +67,7 @@ interface ThumbnailComponentProps {
   linearGradient: string
   backgroundImage: number
   subActiveTab: SubActiveTabs
+  tweetDateAndViews: boolean
 }
 
 interface EditorSidebarProps {
@@ -94,9 +94,11 @@ interface EditorSidebarProps {
   setBackgroundImage: (value: number) => void
   subActiveTab: SubActiveTabs
   setSubActiveTab: (value: SubActiveTabs) => void
+  tweetDateAndViews: boolean
+  setTweetDateAndViews: (value: boolean) => void
 }
 
-export function XComp() {
+ function Twitter() {
   const [paddingValue, setPaddingValue] = useState(3)
   const [imageScale, setImageScale] = useState(1)
   const [imageBorder, setImageBorder] = useState(1)
@@ -108,6 +110,7 @@ export function XComp() {
   const [linearGradient, setLinearGradient] = useState(initialLinearGradient)
   const [backgroundImage, setBackgroundImage] = useState(1)
   const [subActiveTab, setSubActiveTab] = useState<SubActiveTabs>('Gradient')
+  const [tweetDateAndViews, setTweetDateAndViews] = useState(false)
   return (
         <div id="maindiv" className="flex flex-col sm:flex-row justify-between overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh)"}}
         >
@@ -122,6 +125,7 @@ export function XComp() {
             linearGradient={linearGradient}
             backgroundImage={backgroundImage}
             subActiveTab={subActiveTab}
+            tweetDateAndViews={tweetDateAndViews}
           />
           <EditorSidebar 
             text="Made By John 🔥" 
@@ -147,6 +151,8 @@ export function XComp() {
             setBackgroundImage={setBackgroundImage}
             subActiveTab={subActiveTab}
             setSubActiveTab={setSubActiveTab}
+            tweetDateAndViews={tweetDateAndViews}
+            setTweetDateAndViews={setTweetDateAndViews}
         />
       </div>
   )
@@ -163,7 +169,8 @@ const ThumbnailComponent = ({
   filters,
   linearGradient,
   backgroundImage,
-  subActiveTab
+  subActiveTab,
+  tweetDateAndViews
 }:
   ThumbnailComponentProps
 ) => {
@@ -171,9 +178,10 @@ const ThumbnailComponent = ({
   const [watermarkStyle, setWatermarkStyle] = useState('dark');
   const [watermarkText, setWatermarkText] = useState('ToolsArsenal');
   const [showWaterMarkOptions, setShowWaterMarkOptions] = useState(false)
+  const [url, setUrl] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [heartColor, setHeartColor] = useState(heartEmpty)
-  const [heartBg, setHeartBg] = useState(heartEmptyBg)
+  const [tweet, setTweet] = useState<Tweet | null>(null)
   const [userImage, setUserImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -191,15 +199,41 @@ const ThumbnailComponent = ({
       reader.readAsDataURL(file);
     }
   };
-  const handleToggleHeart = () => {
-    setHeartColor(prevColor => prevColor === heartEmpty ? heartFilled : heartEmpty)
-    setHeartBg(prevBg => prevBg === heartEmptyBg ? heartFilledBg : heartEmptyBg)
-  }
+
+
+  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
+    setIsLoading(true)
+    e.preventDefault();
+    try {
+        const tweetId = extractTweetId(url);
+        const response = await fetch('/api/media/twitter', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ tweetId }),
+        });
+        const data = await response.json();
+        setTweet(data);
+        setUserImage(data.tweetBy.profileImage)
+    } catch (error) {
+      setError(true)
+    }finally {
+      setIsLoading(false)
+    }
+    
+  };
   const ResetState = () => {
+    setUrl('')
+    setIsLoading(true)
     setError(false)
   }
   const toggleWatermark = () => {
     setShowWaterMarkOptions(prev => !prev)
+  }
+  if(error) {
+    toast.error("Error fetching thumbnail")
+    ResetState()
   }
   // const paddingOuter = Position2[imagePosition as keyof typeof Position2](paddingValue)
   return (
@@ -226,6 +260,47 @@ const ThumbnailComponent = ({
           scrollMargin: '0px',
         }}
       >
+      {
+        isLoading ? (
+          <div
+          id="imgdiv"
+          style={{
+            display: 'grid',
+            borderRadius: '1px',
+            boxShadow: 'rgb(60, 58, 58) 0px 4px 20px 0px',
+            position: 'relative',
+            transform: imageTransform,
+            overflow: 'hidden',
+            scale: `${imageScale}`,
+            transition: 'all 0.25s ease 0s',
+          }}
+        >
+          <div className="bg-white dark:bg-black p-4 rounded-lg min-w-[300px]">
+            <label
+              htmlFor="small-input"
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >
+              Enter Tweet 𝕏 here
+            </label>
+            <input
+              name="title"
+              placeholder="Paste Tweet URL here"
+              type="text"
+              id="default-input"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm rounded-lg block w-full p-2.5 mb-4"
+            />
+            <button 
+              className="text-sm bg-[#121212] text-white font-semibold px-4 py-1 rounded-md" 
+              type="button" 
+              onClick={(e) => handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)}
+            >
+              Get Tweet
+            </button>
+          </div>
+        </div>
+        ) : (
           <div
           id="imgdiv"
           style={{
@@ -240,83 +315,85 @@ const ThumbnailComponent = ({
           }}
         >
           <div
-  style={{
-    backgroundColor: "white",
-    padding: "16px",
-    fontFamily: "sans-serif",
-    color: "black",
-    borderRadius: "1px",
-    borderTopWidth: "medium",
-    borderRightWidth: "medium",
-    borderLeftWidth: "medium",
-    borderTopStyle: "none",
-    borderRightStyle: "none",
-    borderLeftStyle: "none",
-    borderTopColor: "currentcolor",
-    borderRightColor: "currentcolor",
-    borderLeftColor: "currentcolor",
-    borderImage: "none",
-    overflow: "hidden",
-  }}
->
-  <input
-    name="photo"
-    type="file"
-    accept="image/png, image/jpg, image/jpeg,image/jfif"
-    style={{ display: "none" }}
-    onChange={handleFileChange}
-    ref={fileInputRef}
-  />
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      width: "100%",
-    }}
-  >
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <img
-        alt="Elon Musk"
-        src={userImage || "https://www.picyard.in/Elon.jpg"}
-        style={{ width: "48px", height: "48px", borderRadius: "50%" }}
-        onClick={handleImageClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            handleImageClick();
-          }
+            style={{
+            backgroundColor: 'rgb(255, 255, 255)',
+            padding: '16px',
+            fontFamily: 'sans-serif',
+            color: 'rgb(0, 0, 0)',
+            borderRadius: '1px',
+            borderTopWidth: 'medium',
+            borderRightWidth: 'medium',
+            borderLeftWidth: 'medium',
+            borderTopStyle: 'none',
+            borderRightStyle: 'none',
+            borderLeftStyle: 'none',
+            borderTopColor: 'currentcolor',
+            borderRightColor: 'currentcolor',
+            borderLeftColor: 'currentcolor',
+            borderImage: 'none',
+            overflow: 'hidden',
+            width: '100%',
         }}
-      />
-      <div
-        style={{
-          marginLeft: "12px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          maxHeight: "40px",
-          height: "15px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
+        >
+        <input
+            name="photo"
+            type="file"
+            accept="image/png, image/jpg, image/jpeg,image/jfif"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+            ref={fileInputRef}
+        />
+        <div
+            style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            }}
+        >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img
+                src={userImage || tweet?.tweetBy?.profileImage}
+                style={{ width: '48px', height: '48px', borderRadius: '50%' }}
+                alt="profile"
+                onClick={handleImageClick}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleImageClick();
+                  }
+                }}
+            />
+            <div
+                style={{
+                marginLeft: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                maxHeight: '40px',
+                height: '15px',
+                }}
+            >
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <span
             contentEditable="true"
+            data-value="https://x.com/jamespotterdev/status/1830181400408133893"
+            data-name="title"
             style={{
-              marginBottom: "0px",
-              fontSize: "15px",
-              fontWeight: "600",
-              outline: "currentcolor",
-              border: "medium",
-              background: "none",
-              color: "black",
-              display: "inline-block",
-              boxSizing: "border-box",
-              width: "100%",
-              height: "21px",
+              marginBottom: '0px',
+              fontSize: '15px',
+              fontWeight: '600',
+              outline: 'currentcolor',
+              border: 'medium',
+              background: 'none',
+              display: 'inline-block',
+              boxSizing: 'border-box',
+              width: '100%',
+              height: '21px',
             }}
           >
-            Elon Musk
+            {tweet?.tweetBy?.fullName}
           </span>
-          <svg
+          {tweet?.tweetBy?.isVerified && <svg
             stroke="currentColor"
             fill="currentColor"
             strokeWidth="0"
@@ -325,119 +402,87 @@ const ThumbnailComponent = ({
             height="18"
             width="18"
             xmlns="http://www.w3.org/2000/svg"
-            style={{
-              color: "rgb(29, 155, 240)",
-              height: "20px",
-              marginLeft: "1px",
-            }}
+            style={{ color: 'rgb(29, 155, 240)', height: '20px', marginLeft: '1px' }}
           >
-            <title>like</title>
+            <title>something</title>
             <path d="M17.03 9.78a.75.75 0 0 0-1.06-1.06l-5.47 5.47-2.47-2.47a.75.75 0 0 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l6-6Z"/>
             <path d="m14.136 1.2 1.375 1.01c.274.201.593.333.929.384l1.687.259a3.61 3.61 0 0 1 3.02 3.021l.259 1.686c.051.336.183.655.384.929l1.01 1.375a3.61 3.61 0 0 1 0 4.272l-1.01 1.375a2.106 2.106 0 0 0-.384.929l-.259 1.687a3.61 3.61 0 0 1-3.021 3.02l-1.686.259a2.106 2.106 0 0 0-.929.384l-1.375 1.01a3.61 3.61 0 0 1-4.272 0l-1.375-1.01a2.106 2.106 0 0 0-.929-.384l-1.687-.259a3.61 3.61 0 0 1-3.02-3.021l-.259-1.686a2.117 2.117 0 0 0-.384-.929L1.2 14.136a3.61 3.61 0 0 1 0-4.272l1.01-1.375c.201-.274.333-.593.384-.929l.259-1.687a3.61 3.61 0 0 1 3.021-3.02l1.686-.259c.336-.051.655-.183.929-.384L9.864 1.2a3.61 3.61 0 0 1 4.272 0Zm-3.384 1.209-1.375 1.01a3.614 3.614 0 0 1-1.59.658l-1.686.258a2.111 2.111 0 0 0-1.766 1.766l-.258 1.686a3.61 3.61 0 0 1-.658 1.589l-1.01 1.376a2.11 2.11 0 0 0 0 2.496l1.01 1.375c.344.469.57 1.015.658 1.59l.258 1.686c.14.911.855 1.626 1.766 1.766l1.686.258a3.61 3.61 0 0 1 1.589.658l1.376 1.01a2.11 2.11 0 0 0 2.496 0l1.375-1.01a3.613 3.613 0 0 1 1.59-.657l1.686-.26a2.11 2.11 0 0 0 1.766-1.765l.258-1.686a3.61 3.61 0 0 1 .658-1.589l1.01-1.376a2.11 2.11 0 0 0 0-2.496l-1.01-1.375a3.613 3.613 0 0 1-.657-1.59l-.26-1.686a2.11 2.11 0 0 0-1.765-1.766l-1.686-.258a3.61 3.61 0 0 1-1.589-.658l-1.376-1.01a2.11 2.11 0 0 0-2.496 0Z"/>
-          </svg>
+          </svg>}
         </div>
         <span
           contentEditable="true"
+          data-value="subtitle"
+          data-name="subtitle"
           style={{
-            marginBottom: "0px",
-            fontSize: "14px",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            outline: "currentcolor",
-            border: "medium",
-            background: "none",
-            color: "rgb(83, 100, 113)",
-            display: "inline-block",
-            width: "100%",
+            marginBottom: '0px',
+            fontSize: '14px',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            outline: 'currentcolor',
+            border: 'medium',
+            background: 'none',
+            color: 'rgb(83, 100, 113)',
+            display: 'inline-block',
+            width: '100%',
           }}
         >
-          @elonmusk
+          {tweet?.tweetBy?.userName}
         </span>
-      </div>
-    </div>
-    <div>
-      <svg
-        stroke="currentColor"
-        fill="currentColor"
-        strokeWidth="0"
-        viewBox="0 0 16 16"
-        color="rgb(83, 100, 113)"
-        height="1em"
-        width="1em"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ color: "rgb(83, 100, 113)" }}
-      >
-        <title>more</title>
-        <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
-      </svg>
-    </div>
-  </div>
-  <p
-    contentEditable="true"
-    style={{
-      outline: "currentcolor",
-      border: "medium",
-      margin: "8px 0px",
-    }}
-  >
-    Picyard is the best tool for creating image mockups
-  </p>
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-around",
-      alignItems: "center",
-    }}
-  >
-    <svg 
-    stroke="currentColor" 
-    fill="currentColor" 
-    strokeWidth={0} 
-    viewBox="0 0 16 16" 
-    color="#536471" 
-    height={18} 
-    width={18} 
-    xmlns="http://www.w3.org/2000/svg" 
-    style={{color: "rgb(83, 100, 113)"}}
-    >
-    <title>something</title>
-    <path d="M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105"/>
-    </svg>
-    <div className="flex justify-center items-center">
-      <svg
-        height={20}
-        width={20}
-        viewBox="0 0 24 24"
-        fill={heartColor}
-        xmlns="http://www.w3.org/2000/svg"
-        onClick={handleToggleHeart}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            handleToggleHeart();
-          }
-        }}
-        className="flex items-center justify-center"
-      >
-        <title>Heart</title>
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-          stroke="black"
-          strokeWidth={heartColor === heartFilled ? 0 : 1}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </div>
-    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16" color="#536471" height="16" width="16" xmlns="http://www.w3.org/2000/svg" style={{color: "rgb(83, 100, 113)"}}>
-    <title>temp</title><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1z"/></svg>
-    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" color="#536471" height="18" width="18" xmlns="http://www.w3.org/2000/svg" style={{color: "rgb(83, 100, 113)"}}><title>temp2</title><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-  </div>
-</div>
-
+            </div>
+            </div>
+            <div>
+            <img
+                className="h-8 w-8"
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Twitter_2012_logo.svg/640px-Twitter_2012_logo.svg.png"
+                alt=""
+            />
+            </div>
         </div>
-        
+        <p
+            contentEditable="true"
+            style={{
+            outline: 'currentcolor',
+            border: 'medium',
+            margin: '8px 0px',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+            width: '100%',
+            }}
+        >
+            {tweet?.fullText}
+        </p>
+        <img
+            src={tweet?.media?.[0]?.url}
+            alt=""
+            style={{ width: '100%' }}
+            />
+            </div>
+            {tweetDateAndViews && <div className="h-10 flex flex-row gap-[3px] px-2 bg-[rgb(255,255,255)] dark:bg-[rgb(20,20,20)] pt-2">
+                <p className="text-muted-foreground text-sm">{convertDateFormat(tweet?.createdAt || '')}</p>
+                <span className="text-muted-foreground text-sm mx-1">·</span>
+                <p className=" text-sm font-bold">{convertViews(tweet?.viewCount || 0)}</p>
+            </div>}
+            {false && <div
+                style={{
+                display: "flex",
+                justifyContent: "space-around",
+                alignItems: "center",
+                }}
+                className="bg-[rgb(255,255,255)] dark:bg-[rgb(20,20,20)] px-2 py-2"
+            > 
+            <div className="flex flex-row size-1.5 gap-[1px]">
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5" fill="currentColor">
+              <g>
+                <path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"/>
+              </g>
+            </svg>
+            <span className="text-sm font-medium">{tweet?.likeCount}</span>
+            </div>
+            </div>}
+        </div>
+        )
+      }
 
         {/* Watermark */}
         {showWatermark && (
@@ -525,7 +570,9 @@ const EditorSidebar = ({
   backgroundImage,
   setBackgroundImage,
   subActiveTab,
-  setSubActiveTab
+  setSubActiveTab,
+  tweetDateAndViews,
+  setTweetDateAndViews,
 }: EditorSidebarProps) => {
   const [ResetDialog, confirm] = useConfirm(
     'Reset',
@@ -591,6 +638,9 @@ const EditorSidebar = ({
   const handleImageChange = (num: number) => {
     setBackgroundImage(num);
     setSelectedImage(num);
+  }
+  const handleTweetDateAndViewsToggle = () => {
+    setTweetDateAndViews(!tweetDateAndViews);
   }
   return (
     <div id="rightAside" className="w-full justify-center items-center md:justify-normal sm:max-w-[340px] md:w-full bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
@@ -716,6 +766,11 @@ const EditorSidebar = ({
             <>
               <div className="p-4 my-2 rounded-xl text-sm">
               <div>
+              <ToggleSwitch
+                isOn={tweetDateAndViews}
+                onToggle={handleTweetDateAndViewsToggle}
+                label="Show Tweet Date and Views"
+                />
                 <div className="flex flex-row justify-between">
                   <div className="flex items-center cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl mr-4 w-[45%]">
                     <span>Color</span>
@@ -978,4 +1033,5 @@ const EditorSidebar = ({
     </div>
   );
 };
-export default XComp;
+
+export default Twitter;

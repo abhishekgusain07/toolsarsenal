@@ -1,18 +1,17 @@
-const apiUrl = 'https://oauth.reddit.com/r/cars/new';
+const { Rettiwt } = require("rettiwt-api");
 
-const run = async () => {
-    const response = await fetch(apiUrl, {
-        headers: {
-    'Authorization': `bearer ${process.env.REDDIT_ACCESS_TOKEN}`,
-            'User-Agent': 'Foreign_Vacation_966'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('making calll ...')
-        console.log(data)
-    })
-        .catch(error => console.error('Error:', error));
-}
+// Creating a new Rettiwt instance
+const rettiwt = new Rettiwt({ apiKey: process.env.RETTIWT_API_KEY });
 
-run()
+
+
+
+
+// Logging in an getting the API_KEY
+rettiwt.tweet.details('1830246230913433633')
+.then(res => {
+    console.log(res);
+})
+.catch(err => {
+    console.log(err);
+});
