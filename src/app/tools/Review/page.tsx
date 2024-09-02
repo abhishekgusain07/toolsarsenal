@@ -13,8 +13,12 @@ import { Transform } from "@/constants/transform"
 import { Position } from "@/constants/constant"
 import { useConfirm } from "@/hooks/use-confirm"
 import { EmptySvg, FilledSvg } from "./Icon"
+import { BasicStarReview } from "./Ratingone"
+import { HighlightedAuthorReview } from "./Ratingtwo"
+import { CenteredWithImage } from "./RatingThree"
 
-type ActiveTabs = 'Settings' | 'Edit' | 'Background';
+type AvailableReviewTemplates = 1 | 2 | 3 | 4
+type ActiveTabs = 'Settings' | 'Edit' | 'Background' | 'Review';
 type SubActiveTabs = 'Gradient' | 'Image' | 'Solid';
 const initialTransform = 'perspective(500px) rotateY(0deg) rotateX(0deg)';
 const initialPosition = '1 1 1 1';
@@ -67,184 +71,8 @@ interface ThumbnailComponentProps {
   linearGradient: string
   backgroundImage: number
   subActiveTab: SubActiveTabs
+  reviewTemplate: AvailableReviewTemplates
 }
-const  TemplateOne = () => {
-    const [userImage, setUserImage] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [rating, setRating] = useState(0);
-    const handleRating = (rating: number) => {
-        setRating(rating);
-    }
-    const handleImageClick = () => {
-        fileInputRef.current?.click();
-      };
-    
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-        setUserImage(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-    }
-    };
-
-    const FilledSvgClick = (n: number) => {
-        setRating(n-1)
-    }
-    const EmptySvgClick = (n: number) => {
-        setRating(n)
-    }
-    return (
-        <div
-            style={{
-                backgroundColor: "white",
-                padding: "16px",
-                fontFamily: "sans-serif",
-                color: "black",
-                borderRadius: "1px",
-                borderTopWidth: "medium",
-                borderRightWidth: "medium",
-                borderLeftWidth: "medium",
-                borderTopStyle: "none",
-                borderRightStyle: "none",
-                borderLeftStyle: "none",
-                borderTopColor: "currentcolor",
-                borderRightColor: "currentcolor",
-                borderLeftColor: "currentcolor",
-                borderImage: "none",
-                overflow: "hidden",
-            }}
-            >
-            <input
-            name="photo"
-            type="file"
-            accept="image/png, image/jpg, image/jpeg, image/jfif"
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-            ref={fileInputRef}
-        />
-        <div
-            style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            }}
-        >
-            <div
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                height: '44px',
-            }}
-            >
-            <img
-                src={userImage || "https://www.picyard.in/Elon.jpg"}
-                style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '50%',
-                }}
-                alt="Elon Musk"
-                onClick={handleImageClick}
-                onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    handleImageClick();
-                }
-                }}
-            />
-            <div
-                style={{
-                marginLeft: '8px',
-                maxHeight: '44px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                }}
-            >
-                <span
-                data-name="title"
-                style={{
-                    padding: '0',
-                    margin: '0px',
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    outline: 'none',
-                    border: 'none',
-                    background: 'transparent',
-                    display: 'inline-block',
-                    boxSizing: 'border-box',
-                    width: '100%',
-                }}
-                data-value="Title"
-                contentEditable
-                >Title</span>
-                <span
-                data-name="subtitle"
-                style={{
-                    padding: '0',
-                    margin: '0px',
-                    fontSize: '14px',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    outline: 'none',
-                    border: 'none',
-                    background: 'transparent',
-                    color: '#000000',
-                    display: 'inline-block',
-                    width: '100%',
-                }}
-                contentEditable={true}
-                data-value="subtitle"
-                >
-                Subtitle
-                </span>
-            </div>
-            </div>
-            <div style={{ cursor: 'pointer' }}/>
-        </div>
-        <div
-            style={{
-            margin: '0',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginTop: '14px',
-            }}
-        >
-            {
-                rating >= 1 ? <FilledSvg onClick={() => FilledSvgClick(1)} /> : <EmptySvg onClick={() => EmptySvgClick(1)} />
-            }
-            {
-                rating >= 2 ? <FilledSvg onClick={() => FilledSvgClick(2)} /> : <EmptySvg onClick={() => EmptySvgClick(2)} />
-            }
-            {
-                rating >= 3 ? <FilledSvg onClick={() => FilledSvgClick(3)} /> : <EmptySvg onClick={() => EmptySvgClick(3)} />
-            }
-            {
-                rating >= 4 ? <FilledSvg onClick={() => FilledSvgClick(4)} /> : <EmptySvg onClick={() => EmptySvgClick(4)} />
-            }
-            {
-                rating >= 5 ? <FilledSvg onClick={() => FilledSvgClick(5)} /> : <EmptySvg onClick={() => EmptySvgClick(5)} />
-            }
-        </div>
-        <p
-            contentEditable="true"
-            style={{
-            outline: "currentcolor",
-            border: "medium",
-            margin: "8px 0px",
-            }}
-        >
-            ToolsArsenal is the best tool for creating image mockups
-        </p>
-        
-        </div>
-    )
-}
-
-
 
 interface EditorSidebarProps {
   text?: string
@@ -270,6 +98,8 @@ interface EditorSidebarProps {
   setBackgroundImage: (value: number) => void
   subActiveTab: SubActiveTabs
   setSubActiveTab: (value: SubActiveTabs) => void
+  reviewTemplate: AvailableReviewTemplates
+  setReviewTemplate: (value: AvailableReviewTemplates) => void
 }
 
 function ReviewComp() {
@@ -284,6 +114,8 @@ function ReviewComp() {
   const [linearGradient, setLinearGradient] = useState(initialLinearGradient)
   const [backgroundImage, setBackgroundImage] = useState(1)
   const [subActiveTab, setSubActiveTab] = useState<SubActiveTabs>('Gradient')
+  const [reviewTemplate, setReviewTemplate] = useState<AvailableReviewTemplates>(3)
+
   return (
         <div id="maindiv" className="flex flex-col sm:flex-row justify-between overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh)"}}
         >
@@ -298,6 +130,7 @@ function ReviewComp() {
             linearGradient={linearGradient}
             backgroundImage={backgroundImage}
             subActiveTab={subActiveTab}
+            reviewTemplate={reviewTemplate}
           />
           <EditorSidebar 
             text="Made By John 🔥" 
@@ -323,6 +156,8 @@ function ReviewComp() {
             setBackgroundImage={setBackgroundImage}
             subActiveTab={subActiveTab}
             setSubActiveTab={setSubActiveTab}
+            reviewTemplate={reviewTemplate}
+            setReviewTemplate={setReviewTemplate}
         />
       </div>
   )
@@ -339,7 +174,8 @@ const ThumbnailComponent = ({
   filters,
   linearGradient,
   backgroundImage,
-  subActiveTab
+  subActiveTab,
+  reviewTemplate
 }:
   ThumbnailComponentProps
 ) => {
@@ -415,7 +251,10 @@ const ThumbnailComponent = ({
             transition: 'all 0.25s ease 0s',
           }}
         >
-            <TemplateOne />
+            {reviewTemplate === 1 && <TemplateOne />}
+            {reviewTemplate === 2 && <TemplateTwo rating={4} text="ToolsArsenal is the best tool for creating image mockups" />}
+            {reviewTemplate === 3 && <TemplateThree displayName="John Doe" text="When you get a review from a source you want to stand out, this is an ideal component. Both their title and image are displayed directly below their review to draw attention" jobTitle="Software Engineer" />}
+            {reviewTemplate === 4 && <TemplateFour displayName="John Doe" text="When you get a review from a source you want to stand out, this is an ideal component. Both their title and image are displayed directly below their review to draw attention" rating={4} jobTitle="Software Engineer" />}
    </div>
         
 
@@ -505,7 +344,9 @@ const EditorSidebar = ({
   backgroundImage,
   setBackgroundImage,
   subActiveTab,
-  setSubActiveTab
+  setSubActiveTab,
+  reviewTemplate,
+  setReviewTemplate
 }: EditorSidebarProps) => {
   const [ResetDialog, confirm] = useConfirm(
     'Reset',
@@ -521,8 +362,13 @@ const EditorSidebar = ({
   const [selectedGradient, setSelectedGradient] = useState<string>(Gradients[0])
   const [selectedSolidColor, setSelectedSolidColor] = useState<string>(PlainColors[0])
   const [selectedImage, setSelectedImage] = useState<number>(1)
-
+  const [selectedReviewTemplate, setSelectedReviewTemplate] = useState<AvailableReviewTemplates>(reviewTemplate)
   // extract rgb values from gradient
+
+  const handleReviewTemplateChange = (template: AvailableReviewTemplates) => {
+    setSelectedReviewTemplate(template)
+    setReviewTemplate(template)
+  }
   function extractRGBValues(gradient:string) {
     const rgbRegex = /rgb\(\d{1,3},\s*\d{1,3},\s*\d{1,3}\)/g;
     return gradient.match(rgbRegex);
@@ -573,7 +419,7 @@ const EditorSidebar = ({
     setSelectedImage(num);
   }
   return (
-    <div id="rightAside" className="w-full justify-center items-center md:justify-normal sm:max-w-[340px] md:w-full bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
+    <div id="rightAside" className="w-full justify-center items-center md:justify-normal sm:max-w-[430px] md:w-full bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
       <ResetDialog />
         <div className="w-full flex flex-row items-center justify-between rounded-t-xl p-2 text-xs font-medium border bg-gray-50 dark:bg-[#0f0f0f] dark:border-gray-950">
           <p className={cn("px-4 text-center py-2 rounded-lg cursor-pointer dark:bg-[#1a1a1a] font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Settings' && 'bg-white px-4 shadow-md')}
@@ -598,14 +444,23 @@ const EditorSidebar = ({
               }
             }}
           >Edit</p>
-          <p className={cn("w-full text-center py-2 rounded-lg cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Background' && 'bg-white px-4 shadow-md')}
-            onClick={() => setActiveTabs('Background')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                setActiveTabs('Background');
-              }
-            }}
-          >Background</p>
+            <p className={cn("w-full text-center py-2 rounded-lg cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Background' && 'bg-white px-4 shadow-md')}
+                onClick={() => setActiveTabs('Background')}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    setActiveTabs('Background');
+                }
+                }}
+            >Background</p>
+                <p className={cn("w-full text-center py-2 rounded-lg cursor-pointer font-semibold hover:bg-gray-200 dark:hover:bg-[#121212] mx-1", activeTabs === 'Review' && 'bg-white px-4 shadow-md')}
+                onClick={() => setActiveTabs('Review')}
+                onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    setActiveTabs('Background');
+                }
+                }}
+            >Review Templates</p>
+
         </div>
         {
           activeTabs === 'Settings' && (
@@ -939,6 +794,52 @@ const EditorSidebar = ({
               }
             </>
           )
+        }
+        {
+            activeTabs === 'Review' && (
+                <>
+                
+                <div className="p-4 mt-4 rounded-xl text-sm w-full"
+                    style={{
+                        scrollbarWidth: 'none',
+                    }}
+                >
+                <span className="text-lg font-bold mb-2">Choose A Template</span>
+                    <div className="flex overflow-x-auto scroll-m-0 scrollbar-none">
+                        {Array.from({ length: 4 }, (_, number) => number + 1).map((_, ind) => {
+                            const index = ind+1;
+                            return(
+                        <div 
+                            key={index} 
+                            className={cn("flex-shrink-0 w-20 h-20 mr-2 rounded-sm transition-all duration-300", selectedReviewTemplate === index ? 'scale-110' : 'blur-xl')} 
+                            style={{
+                            background: 'linear-gradient(135deg, #FF002C, #FF0057, #FF0082, #FF00AD, #FF00D8, #C100FF, #8900FF, #5900FF, #2400FF)',
+                            backgroundSize: 'cover',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            filter: `brightness(1) contrast(1) grayscale(0) blur(${selectedReviewTemplate === index ? '0' : '2'}px) hue-rotate(0deg) invert(0) opacity(1) saturate(1) sepia(0)`,
+                            opacity: 1
+                        }}
+                            onClick={() => handleReviewTemplateChange(index as AvailableReviewTemplates)}
+                            onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                handleReviewTemplateChange(index as AvailableReviewTemplates);
+                            }
+                            }}
+                        >
+                            <div className="object-cover bg-slate-50 border" style={{
+                            }}
+                            >
+                                <img src={`/review${index}.png`} alt={`review${index}`} />
+                            </div>
+                        </div>
+                        )
+                    })}
+                    </div>
+                    </div>
+                </>
+            )
         }  
       
 
@@ -959,3 +860,175 @@ const EditorSidebar = ({
   );
 };
 export default ReviewComp;
+
+
+
+const TemplateOne = () => {
+    const [userImage, setUserImage] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [rating, setRating] = useState(0);
+
+    const handleImageClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setUserImage(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRatingClick = (n: number, filled: boolean) => {
+        setRating(n)
+    };
+
+    return (
+        <div
+            style={{
+                backgroundColor: "white",
+                padding: "16px",
+                fontFamily: "sans-serif",
+                color: "black",
+                borderRadius: "1px",
+                borderTopWidth: "medium",
+                borderRightWidth: "medium",
+                borderLeftWidth: "medium",
+                borderTopStyle: "none",
+                borderRightStyle: "none",
+                borderLeftStyle: "none",
+                borderTopColor: "currentcolor",
+                borderRightColor: "currentcolor",
+                borderLeftColor: "currentcolor",
+                borderImage: "none",
+                overflow: "hidden",
+            }}
+        >
+            <input
+                name="photo"
+                type="file"
+                accept="image/png, image/jpg, image/jpeg, image/jfif"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+                ref={fileInputRef}
+            />
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                }}
+            >
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        height: '44px',
+                    }}
+                >
+                    <img
+                        src={userImage || "https://www.picyard.in/Elon.jpg"}
+                        style={{
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '50%',
+                        }}
+                        alt="Elon Musk"
+                        onClick={handleImageClick}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                handleImageClick();
+                            }
+                        }}
+                    />
+                    <div
+                        style={{
+                            marginLeft: '8px',
+                            maxHeight: '44px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <span
+                            data-name="title"
+                            style={{
+                                padding: '0',
+                                margin: '0px',
+                                fontSize: '16px',
+                                fontWeight: 600,
+                                outline: 'none',
+                                border: 'none',
+                                background: 'transparent',
+                                display: 'inline-block',
+                                boxSizing: 'border-box',
+                                width: '100%',
+                            }}
+                            data-value="Title"
+                            contentEditable
+                        >Title</span>
+                        <span
+                            data-name="subtitle"
+                            style={{
+                                padding: '0',
+                                margin: '0px',
+                                fontSize: '14px',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                outline: 'none',
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#000000',
+                                display: 'inline-block',
+                                width: '100%',
+                            }}
+                            contentEditable={true}
+                            data-value="subtitle"
+                        >
+                            Subtitle
+                        </span>
+                    </div>
+                </div>
+                <div style={{ cursor: 'pointer' }} />
+            </div>
+            <div
+                style={{
+                    margin: '0',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginTop: '14px',
+                }}
+            >
+                {[1, 2, 3, 4, 5].map((n) => (
+                    rating >= n ? 
+                        <FilledSvg key={n} onClick={() => handleRatingClick(n, true)} /> : 
+                        <EmptySvg key={n} onClick={() => handleRatingClick(n, false)} />
+                ))}
+            </div>
+            <p
+                contentEditable="true"
+                style={{
+                    outline: "currentcolor",
+                    border: "medium",
+                    margin: "8px 0px",
+                }}
+            >
+                ToolsArsenal is the best tool for creating image mockups
+            </p>
+        </div>
+    );
+};
+const TemplateTwo = ({rating, text}: {rating: number, text: string}) => {
+   return <BasicStarReview rating={rating} text={text} />
+}
+const TemplateThree = ({displayName, text, jobTitle}: {displayName: string, text: string, jobTitle: string}) => {
+    return <HighlightedAuthorReview displayName={displayName} text={text} jobTitle={jobTitle}/>
+}
+const TemplateFour = ({displayName, text, rating, jobTitle}: {displayName: string, text: string, rating: number, jobTitle: string}) => {
+    return <CenteredWithImage displayName={displayName} text={text} rating={rating} jobTitle={jobTitle}/>
+}
