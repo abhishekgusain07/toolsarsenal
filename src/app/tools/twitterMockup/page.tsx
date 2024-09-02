@@ -96,7 +96,7 @@ interface EditorSidebarProps {
   setSubActiveTab: (value: SubActiveTabs) => void
 }
 
-export function XComp() {
+function TwitterMockup() {
   const [paddingValue, setPaddingValue] = useState(3)
   const [imageScale, setImageScale] = useState(1)
   const [imageBorder, setImageBorder] = useState(1)
@@ -978,4 +978,4 @@ const EditorSidebar = ({
     </div>
   );
 };
-export default XComp;
+export default TwitterMockup;
