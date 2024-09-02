@@ -16,6 +16,7 @@ import { EmptySvg, FilledSvg } from "./Icon"
 import { BasicStarReview } from "./Ratingone"
 import { HighlightedAuthorReview } from "./Ratingtwo"
 import { CenteredWithImage } from "./RatingThree"
+import { Info } from "lucide-react"
 
 type AvailableReviewTemplates = 1 | 2 | 3 | 4
 type ActiveTabs = 'Settings' | 'Edit' | 'Background' | 'Review';
@@ -72,6 +73,7 @@ interface ThumbnailComponentProps {
   backgroundImage: number
   subActiveTab: SubActiveTabs
   reviewTemplate: AvailableReviewTemplates
+  ratingIfNotOneAndThree: number
 }
 
 interface EditorSidebarProps {
@@ -100,6 +102,8 @@ interface EditorSidebarProps {
   setSubActiveTab: (value: SubActiveTabs) => void
   reviewTemplate: AvailableReviewTemplates
   setReviewTemplate: (value: AvailableReviewTemplates) => void
+  ratingIfNotOneAndThree: number
+  setRatingIfNotOneAndThree: (value: number) => void
 }
 
 function ReviewComp() {
@@ -115,7 +119,7 @@ function ReviewComp() {
   const [backgroundImage, setBackgroundImage] = useState(1)
   const [subActiveTab, setSubActiveTab] = useState<SubActiveTabs>('Gradient')
   const [reviewTemplate, setReviewTemplate] = useState<AvailableReviewTemplates>(3)
-
+  const [ratingIfNotOneAndThree, setRatingIfNotOneAndThree] = useState<number>(5)
   return (
         <div id="maindiv" className="flex flex-col sm:flex-row justify-between overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh)"}}
         >
@@ -131,6 +135,7 @@ function ReviewComp() {
             backgroundImage={backgroundImage}
             subActiveTab={subActiveTab}
             reviewTemplate={reviewTemplate}
+            ratingIfNotOneAndThree={ratingIfNotOneAndThree}
           />
           <EditorSidebar 
             text="Made By John 🔥" 
@@ -158,6 +163,8 @@ function ReviewComp() {
             setSubActiveTab={setSubActiveTab}
             reviewTemplate={reviewTemplate}
             setReviewTemplate={setReviewTemplate}
+            ratingIfNotOneAndThree={ratingIfNotOneAndThree}
+            setRatingIfNotOneAndThree={setRatingIfNotOneAndThree}
         />
       </div>
   )
@@ -175,7 +182,8 @@ const ThumbnailComponent = ({
   linearGradient,
   backgroundImage,
   subActiveTab,
-  reviewTemplate
+  reviewTemplate,
+  ratingIfNotOneAndThree
 }:
   ThumbnailComponentProps
 ) => {
@@ -252,9 +260,9 @@ const ThumbnailComponent = ({
           }}
         >
             {reviewTemplate === 1 && <TemplateOne />}
-            {reviewTemplate === 2 && <TemplateTwo rating={4} text="ToolsArsenal is the best tool for creating image mockups" />}
+            {reviewTemplate === 2 && <TemplateTwo rating={ratingIfNotOneAndThree-1} text="ToolsArsenal is the best tool for creating image mockups" />}
             {reviewTemplate === 3 && <TemplateThree displayName="John Doe" text="When you get a review from a source you want to stand out, this is an ideal component. Both their title and image are displayed directly below their review to draw attention" jobTitle="Software Engineer" />}
-            {reviewTemplate === 4 && <TemplateFour displayName="John Doe" text="When you get a review from a source you want to stand out, this is an ideal component. Both their title and image are displayed directly below their review to draw attention" rating={4} jobTitle="Software Engineer" />}
+            {reviewTemplate === 4 && <TemplateFour displayName="John Doe" text="When you get a review from a source you want to stand out, this is an ideal component. Both their title and image are displayed directly below their review to draw attention" rating={ratingIfNotOneAndThree-1} jobTitle="Software Engineer" />}
    </div>
         
 
@@ -346,7 +354,9 @@ const EditorSidebar = ({
   subActiveTab,
   setSubActiveTab,
   reviewTemplate,
-  setReviewTemplate
+  setReviewTemplate,
+  ratingIfNotOneAndThree,
+  setRatingIfNotOneAndThree
 }: EditorSidebarProps) => {
   const [ResetDialog, confirm] = useConfirm(
     'Reset',
@@ -418,6 +428,9 @@ const EditorSidebar = ({
     setBackgroundImage(num);
     setSelectedImage(num);
   }
+  const handleRatingClick = (rating: number, isFilled: boolean) => {
+    setRatingIfNotOneAndThree(rating);
+  };
   return (
     <div id="rightAside" className="w-full justify-center items-center md:justify-normal sm:max-w-[430px] md:w-full bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
       <ResetDialog />
@@ -804,7 +817,8 @@ const EditorSidebar = ({
                         scrollbarWidth: 'none',
                     }}
                 >
-                <span className="text-lg font-bold mb-2">Choose A Template</span>
+                    <div className="mt-6 px-2 flex flex-col justify-center items-center">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100 pb-4 text-center">Choose A Template</span>
                     <div className="flex overflow-x-auto scroll-m-0 scrollbar-none">
                         {Array.from({ length: 4 }, (_, number) => number + 1).map((_, ind) => {
                             const index = ind+1;
@@ -836,6 +850,27 @@ const EditorSidebar = ({
                         </div>
                         )
                     })}
+                    </div>
+                    </div>
+                    {
+                        (selectedReviewTemplate !== 1 && selectedReviewTemplate !== 3) && (
+                            <div className="mt-6 px-2 flex flex-col justify-center items-center">
+                                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 pb-4">Choose Rating</span>
+                                <div className="flex flex-row gap-[5px]">
+                                {[1, 2, 3, 4, 5].map((n) => (
+                                    ratingIfNotOneAndThree >= n ? 
+                                        <FilledSvg key={n} onClick={() => handleRatingClick(n, true)} width={40} height={40} /> : 
+                                        <EmptySvg key={n} onClick={() => handleRatingClick(n, false)} width={40} height={40} />
+                                ))}
+                                </div>
+                            </div>
+                        )
+                    }
+                    <div className="flex flex-row gap-[5px] mt-7 px-2 justify-center items-center mr-auto">
+                        <Info className="size-4"/>
+                        <span className="text-sm font-medium text-muted-foreground">
+                            You can change the text by clicking on it
+                        </span>
                     </div>
                     </div>
                 </>
