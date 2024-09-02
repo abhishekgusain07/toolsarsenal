@@ -11,10 +11,11 @@ import { PlainColors } from "@/constants/plainColors"
 import { Transform } from "@/constants/transform"
 import { Position } from "@/constants/constant"
 import { useConfirm } from "@/hooks/use-confirm"
-import extractTweetId, { convertDateFormat, convertViews } from "./helper"
+import extractTweetId, { convertDateFormat, convertNumber, convertViews } from "./helper"
 import { Rettiwt, type Tweet } from "rettiwt-api"
 import TweetPage from "./tweet"
 import ToggleSwitch from "@/components/ui/toggle"
+import { Bookmark, HeartIcon, Repeat2, Upload } from "lucide-react"
 
 type ActiveTabs = 'Settings' | 'Edit' | 'Background';
 type SubActiveTabs = 'Gradient' | 'Image' | 'Solid';
@@ -68,6 +69,7 @@ interface ThumbnailComponentProps {
   backgroundImage: number
   subActiveTab: SubActiveTabs
   tweetDateAndViews: boolean
+  showTweetLikesAndShares: boolean
 }
 
 interface EditorSidebarProps {
@@ -96,6 +98,8 @@ interface EditorSidebarProps {
   setSubActiveTab: (value: SubActiveTabs) => void
   tweetDateAndViews: boolean
   setTweetDateAndViews: (value: boolean) => void
+  showTweetLikesAndShares: boolean
+  setShowTweetLikesAndShares: (value: boolean) => void
 }
 
  function Twitter() {
@@ -111,6 +115,7 @@ interface EditorSidebarProps {
   const [backgroundImage, setBackgroundImage] = useState(1)
   const [subActiveTab, setSubActiveTab] = useState<SubActiveTabs>('Gradient')
   const [tweetDateAndViews, setTweetDateAndViews] = useState(false)
+  const [showTweetLikesAndShares, setShowTweetLikesAndShares] = useState(true)
   return (
         <div id="maindiv" className="flex flex-col sm:flex-row justify-between overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh)"}}
         >
@@ -126,6 +131,7 @@ interface EditorSidebarProps {
             backgroundImage={backgroundImage}
             subActiveTab={subActiveTab}
             tweetDateAndViews={tweetDateAndViews}
+            showTweetLikesAndShares={showTweetLikesAndShares}
           />
           <EditorSidebar 
             text="Made By John 🔥" 
@@ -153,6 +159,8 @@ interface EditorSidebarProps {
             setSubActiveTab={setSubActiveTab}
             tweetDateAndViews={tweetDateAndViews}
             setTweetDateAndViews={setTweetDateAndViews}
+            showTweetLikesAndShares={showTweetLikesAndShares}
+            setShowTweetLikesAndShares={setShowTweetLikesAndShares}
         />
       </div>
   )
@@ -170,7 +178,8 @@ const ThumbnailComponent = ({
   linearGradient,
   backgroundImage,
   subActiveTab,
-  tweetDateAndViews
+  tweetDateAndViews,
+  showTweetLikesAndShares
 }:
   ThumbnailComponentProps
 ) => {
@@ -373,59 +382,59 @@ const ThumbnailComponent = ({
                 height: '15px',
                 }}
             >
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span
+              contentEditable="true"
+              data-value="https://x.com/jamespotterdev/status/1830181400408133893"
+              data-name="title"
+              style={{
+                marginBottom: '0px',
+                fontSize: '15px',
+                fontWeight: '600',
+                outline: 'currentcolor',
+                border: 'medium',
+                background: 'none',
+                display: 'inline-block',
+                boxSizing: 'border-box',
+                width: '100%',
+                height: '21px',
+              }}
+            >
+              {tweet?.tweetBy?.fullName}
+            </span>
+            {tweet?.tweetBy?.isVerified && <svg
+              stroke="currentColor"
+              fill="currentColor"
+              strokeWidth="0"
+              viewBox="0 0 24 24"
+              color="rgb(29, 155, 240)"
+              height="18"
+              width="18"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ color: 'rgb(29, 155, 240)', height: '20px', marginLeft: '1px' }}
+            >
+              <title>something</title>
+              <path d="M17.03 9.78a.75.75 0 0 0-1.06-1.06l-5.47 5.47-2.47-2.47a.75.75 0 0 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l6-6Z"/>
+              <path d="m14.136 1.2 1.375 1.01c.274.201.593.333.929.384l1.687.259a3.61 3.61 0 0 1 3.02 3.021l.259 1.686c.051.336.183.655.384.929l1.01 1.375a3.61 3.61 0 0 1 0 4.272l-1.01 1.375a2.106 2.106 0 0 0-.384.929l-.259 1.687a3.61 3.61 0 0 1-3.021 3.02l-1.686.259a2.106 2.106 0 0 0-.929.384l-1.375 1.01a3.61 3.61 0 0 1-4.272 0l-1.375-1.01a2.106 2.106 0 0 0-.929-.384l-1.687-.259a3.61 3.61 0 0 1-3.02-3.021l-.259-1.686a2.117 2.117 0 0 0-.384-.929L1.2 14.136a3.61 3.61 0 0 1 0-4.272l1.01-1.375c.201-.274.333-.593.384-.929l.259-1.687a3.61 3.61 0 0 1 3.021-3.02l1.686-.259c.336-.051.655-.183.929-.384L9.864 1.2a3.61 3.61 0 0 1 4.272 0Zm-3.384 1.209-1.375 1.01a3.614 3.614 0 0 1-1.59.658l-1.686.258a2.111 2.111 0 0 0-1.766 1.766l-.258 1.686a3.61 3.61 0 0 1-.658 1.589l-1.01 1.376a2.11 2.11 0 0 0 0 2.496l1.01 1.375c.344.469.57 1.015.658 1.59l.258 1.686c.14.911.855 1.626 1.766 1.766l1.686.258a3.61 3.61 0 0 1 1.589.658l1.376 1.01a2.11 2.11 0 0 0 2.496 0l1.375-1.01a3.613 3.613 0 0 1 1.59-.657l1.686-.26a2.11 2.11 0 0 0 1.766-1.765l.258-1.686a3.61 3.61 0 0 1 .658-1.589l1.01-1.376a2.11 2.11 0 0 0 0-2.496l-1.01-1.375a3.613 3.613 0 0 1-.657-1.59l-.26-1.686a2.11 2.11 0 0 0-1.765-1.766l-1.686-.258a3.61 3.61 0 0 1-1.589-.658l-1.376-1.01a2.11 2.11 0 0 0-2.496 0Z"/>
+            </svg>}
+          </div>
           <span
             contentEditable="true"
-            data-value="https://x.com/jamespotterdev/status/1830181400408133893"
-            data-name="title"
+            data-value="subtitle"
+            data-name="subtitle"
             style={{
               marginBottom: '0px',
-              fontSize: '15px',
-              fontWeight: '600',
+              fontSize: '14px',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
               outline: 'currentcolor',
               border: 'medium',
               background: 'none',
+              color: 'rgb(83, 100, 113)',
               display: 'inline-block',
-              boxSizing: 'border-box',
               width: '100%',
-              height: '21px',
             }}
           >
-            {tweet?.tweetBy?.fullName}
-          </span>
-          {tweet?.tweetBy?.isVerified && <svg
-            stroke="currentColor"
-            fill="currentColor"
-            strokeWidth="0"
-            viewBox="0 0 24 24"
-            color="rgb(29, 155, 240)"
-            height="18"
-            width="18"
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ color: 'rgb(29, 155, 240)', height: '20px', marginLeft: '1px' }}
-          >
-            <title>something</title>
-            <path d="M17.03 9.78a.75.75 0 0 0-1.06-1.06l-5.47 5.47-2.47-2.47a.75.75 0 0 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l6-6Z"/>
-            <path d="m14.136 1.2 1.375 1.01c.274.201.593.333.929.384l1.687.259a3.61 3.61 0 0 1 3.02 3.021l.259 1.686c.051.336.183.655.384.929l1.01 1.375a3.61 3.61 0 0 1 0 4.272l-1.01 1.375a2.106 2.106 0 0 0-.384.929l-.259 1.687a3.61 3.61 0 0 1-3.021 3.02l-1.686.259a2.106 2.106 0 0 0-.929.384l-1.375 1.01a3.61 3.61 0 0 1-4.272 0l-1.375-1.01a2.106 2.106 0 0 0-.929-.384l-1.687-.259a3.61 3.61 0 0 1-3.02-3.021l-.259-1.686a2.117 2.117 0 0 0-.384-.929L1.2 14.136a3.61 3.61 0 0 1 0-4.272l1.01-1.375c.201-.274.333-.593.384-.929l.259-1.687a3.61 3.61 0 0 1 3.021-3.02l1.686-.259c.336-.051.655-.183.929-.384L9.864 1.2a3.61 3.61 0 0 1 4.272 0Zm-3.384 1.209-1.375 1.01a3.614 3.614 0 0 1-1.59.658l-1.686.258a2.111 2.111 0 0 0-1.766 1.766l-.258 1.686a3.61 3.61 0 0 1-.658 1.589l-1.01 1.376a2.11 2.11 0 0 0 0 2.496l1.01 1.375c.344.469.57 1.015.658 1.59l.258 1.686c.14.911.855 1.626 1.766 1.766l1.686.258a3.61 3.61 0 0 1 1.589.658l1.376 1.01a2.11 2.11 0 0 0 2.496 0l1.375-1.01a3.613 3.613 0 0 1 1.59-.657l1.686-.26a2.11 2.11 0 0 0 1.766-1.765l.258-1.686a3.61 3.61 0 0 1 .658-1.589l1.01-1.376a2.11 2.11 0 0 0 0-2.496l-1.01-1.375a3.613 3.613 0 0 1-.657-1.59l-.26-1.686a2.11 2.11 0 0 0-1.765-1.766l-1.686-.258a3.61 3.61 0 0 1-1.589-.658l-1.376-1.01a2.11 2.11 0 0 0-2.496 0Z"/>
-          </svg>}
-        </div>
-        <span
-          contentEditable="true"
-          data-value="subtitle"
-          data-name="subtitle"
-          style={{
-            marginBottom: '0px',
-            fontSize: '14px',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            outline: 'currentcolor',
-            border: 'medium',
-            background: 'none',
-            color: 'rgb(83, 100, 113)',
-            display: 'inline-block',
-            width: '100%',
-          }}
-        >
           {tweet?.tweetBy?.userName}
         </span>
             </div>
@@ -463,23 +472,43 @@ const ThumbnailComponent = ({
                 <span className="text-muted-foreground text-sm mx-1">·</span>
                 <p className=" text-sm font-bold">{convertViews(tweet?.viewCount || 0)}</p>
             </div>}
-            {false && <div
+            {showTweetLikesAndShares &&
+            <div
                 style={{
                 display: "flex",
-                justifyContent: "space-around",
-                alignItems: "center",
+                justifyContent: "space-between",
+                alignItems: "start",
+                gap: "4rem",
                 }}
-                className="bg-[rgb(255,255,255)] dark:bg-[rgb(20,20,20)] px-2 py-2"
+                className="bg-[rgb(255,255,255)] dark:bg-[rgb(20,20,20)] px-2 pt-2 pb-5 flex flex-row justify-start items-start"
             > 
-            <div className="flex flex-row size-1.5 gap-[1px]">
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5" fill="currentColor">
-              <g>
-                <path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"/>
-              </g>
+            <div className="flex flex-row gap-[2px] justify-center items-center">
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="text-muted-foreground size-[1.27rem]">
+            <g className="text-muted-foreground">
+              <path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z" fill="currentColor" stroke="currentColor" strokeWidth="0"/>
+            </g>
             </svg>
-            <span className="text-sm font-medium">{tweet?.likeCount}</span>
+            <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.replyCount || 0)}</span>
             </div>
-            </div>}
+            <div className="flex flex-row gap-[2px] justify-center items-center">
+            {/* put svg */}
+            <Repeat2 className="size-5 text-muted-foreground" />
+            <span className="text-sm font-medim text-muted-foreground">{convertNumber(tweet?.retweetCount || 0)}</span>
+            </div>
+            <div className="flex flex-row gap-[2px] justify-center items-center">
+            <HeartIcon className="size-4  text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.likeCount || 0)}</span>
+            </div>
+            <div className="flex flex-row gap-[2px] justify-center items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-heart size-4 text-muted-foreground"><title>views</title><g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></g></svg>
+            <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.viewCount || 0)}</span>
+            </div>
+            <div className="flex flex-row gap-3 justify-center items-center pr-2">
+              <Bookmark className="size-5 text-muted-foreground" />
+              <Upload className="size-5 text-muted-foreground" />
+            </div> 
+            </div>
+            }
         </div>
         )
       }
@@ -573,6 +602,8 @@ const EditorSidebar = ({
   setSubActiveTab,
   tweetDateAndViews,
   setTweetDateAndViews,
+  showTweetLikesAndShares,
+  setShowTweetLikesAndShares,
 }: EditorSidebarProps) => {
   const [ResetDialog, confirm] = useConfirm(
     'Reset',
@@ -581,8 +612,6 @@ const EditorSidebar = ({
 
   const [showWatermark, setShowWatermark] = useState(true);
   const [frame, setFrame] = useState('none');
-  const [color, setColor] = useState('#000000');
-  const [background, setBackground] = useState('#FFFFFF');
   const [activeTabs, setActiveTabs] = useState<ActiveTabs>('Edit')
   const [subActiveTabs, setSubActiveTabs] = useState<SubActiveTabs>('Gradient')
   const [selectedGradient, setSelectedGradient] = useState<string>(Gradients[0])
@@ -641,6 +670,9 @@ const EditorSidebar = ({
   }
   const handleTweetDateAndViewsToggle = () => {
     setTweetDateAndViews(!tweetDateAndViews);
+  }
+  const handleTweetLikesAndSharesToggle = () => {
+    setShowTweetLikesAndShares(!showTweetLikesAndShares);
   }
   return (
     <div id="rightAside" className="w-full justify-center items-center md:justify-normal sm:max-w-[340px] md:w-full bg-white dark:bg-[#1a1a1a] p-2 relative top-0 right-0 z-20 pb-12 scrollbar-none overflow-auto md:h-[calc(100vh-56px)]">
@@ -770,6 +802,11 @@ const EditorSidebar = ({
                 isOn={tweetDateAndViews}
                 onToggle={handleTweetDateAndViewsToggle}
                 label="Show Tweet Date and Views"
+                />
+                <ToggleSwitch
+                  isOn={showTweetLikesAndShares}
+                  onToggle={handleTweetLikesAndSharesToggle}
+                  label="Show comment, Retweets, likes and views"
                 />
                 <div className="flex flex-row justify-between">
                   <div className="flex items-center cursor-pointer mt-4 relative py-0.5 px-3 border border-gray-300 dark:border-gray-600 rounded-2xl mr-4 w-[45%]">
