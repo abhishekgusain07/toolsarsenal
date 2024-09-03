@@ -1,17 +1,15 @@
-const { Rettiwt } = require("rettiwt-api");
-
-// Creating a new Rettiwt instance
-const rettiwt = new Rettiwt({ apiKey: process.env.RETTIWT_API_KEY });
+// const { Rettiwt, EResourceType, FetcherService } = require("rettiwt-api");
 
 
+// const fetcher = new FetcherService({ apiKey: process.env.RETTIWT_API_KEY });
 
-
-
-// Logging in an getting the API_KEY
-rettiwt.tweet.details('1830246230913433633')
-.then(res => {
-    console.log(res);
-})
-.catch(err => {
-    console.log(err);
-});
+// // Fetching the details of the User with username 'user1'
+// fetcher.request(EResourceType.TWEET_SEARCH, { query: 'elonmusk', maxResults: 5, includeRetweets: false, filter: {
+//     images: true,
+// }})
+// .then(res => {
+//     console.log(res.data.tweets);
+// })
+// .catch(err => {
+//     console.log(err);
+// })
