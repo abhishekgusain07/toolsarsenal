@@ -14,10 +14,13 @@ export interface InputProps
   maxLength?: number;
   urlcheck?: any;
   settingsUi?: boolean;
+  onReset?: any;
+  showResetIcon?: boolean;
+  onResetIconPressed?: any;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, description, resetUpdate, maxLength, reset, urlcheck,settingsUi, ...props}, ref) => {
+  ({ className, type, label, description, resetUpdate, maxLength, reset, urlcheck,settingsUi, onReset, showResetIcon, onResetIconPressed, ...props}, ref) => {
     const id = React.useId();
     const [value, setValue] = React.useState(props.value as string);
     React.useEffect(() => {
@@ -28,18 +31,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <div className="flex w-full justify-between items-center">
           <>
             {label && <Label htmlFor={id}>{label}</Label>}
-            {reset && <IconButton className="ml-auto" onClick={(e) => {
-              e.preventDefault();
-              const element = document.getElementById(id) as HTMLTextAreaElement;
-              if (element) {
-                element.value = props.defaultValue as string;
-                if (resetUpdate) {
-                  const updater = resetUpdate[0];
-                  const heading = resetUpdate[1];
-                  updater({ [heading]: props.defaultValue });
-                }
-              }
-            }
+            {showResetIcon && <IconButton className="ml-auto size-4" onClick={
+              onResetIconPressed
             }>
               <ResetIcon className="rotate-180" />
             </IconButton>
