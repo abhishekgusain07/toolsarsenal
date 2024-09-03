@@ -71,3 +71,15 @@
 .mainDiv {
   width:95% !important
 }
+
+.insta-container {
+  margin: 0 auto;
+  font-family: sans-serif;
+  background-color: white;
+}
+.insta-header {
+  display: flex;
+  align-items: center;
+  padding-top: 16px;
+  padding-bottom: 8px;
+}
