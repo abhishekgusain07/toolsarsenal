@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useMutation } from "@tanstack/react-query"
 import { ResetIcon } from "@radix-ui/react-icons"
+import html2canvas from "html2canvas";
 import { toast } from "react-toastify"
 import { Gradients } from "@/constants/gradient"
 import { PlainColors } from "@/constants/plainColors"
@@ -13,6 +14,7 @@ import { Transform } from "@/constants/transform"
 import { Position } from "@/constants/constant"
 import { useConfirm } from "@/hooks/use-confirm"
 import QRCode from "react-qr-code";
+import Header from "@/app/components/Header"
 
 type ActiveTabs = 'Settings' | 'Edit' | 'Background';
 type SubActiveTabs = 'Gradient' | 'Image' | 'Solid';
@@ -72,6 +74,7 @@ interface ThumbnailComponentProps {
   qrCodeValue: string
   qrCodeBackgroundColor: string
   qrCodeTextColor: string
+  fileName: string
 }
 
 interface EditorSidebarProps {
@@ -121,7 +124,12 @@ function Qrcode() {
   const [qrCodeValue, setQrCodeValue] = useState('')
   const [qrCodeBackgroundColor, setQrCodeBackgroundColor] = useState('#FFFFFF')
   const [qrCodeTextColor, setQrCodeTextColor] = useState('#000000')
+
   return (
+    <>
+        <Header 
+            fileName={fileName}
+        />
         <div id="maindiv" className="flex flex-col sm:flex-row justify-between overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh)"}}
         >
           <ThumbnailComponent 
@@ -138,6 +146,7 @@ function Qrcode() {
             qrCodeValue={qrCodeValue}
             qrCodeBackgroundColor={qrCodeBackgroundColor}
             qrCodeTextColor={qrCodeTextColor}
+            fileName={fileName}
           />
           <EditorSidebar 
             text="Made By John 🔥" 
@@ -171,6 +180,7 @@ function Qrcode() {
             setQrCodeTextColor={setQrCodeTextColor}
         />
       </div>
+      </>
   )
 }
 
@@ -188,7 +198,8 @@ const ThumbnailComponent = ({
   subActiveTab,
   qrCodeValue,
   qrCodeBackgroundColor,
-  qrCodeTextColor
+  qrCodeTextColor,
+  fileName
 }:
   ThumbnailComponentProps
 ) => {
@@ -204,6 +215,8 @@ const ThumbnailComponent = ({
   const qrCodeRef = useRef<HTMLDivElement>(null);
 
 
+  
+  
   const handleImageClick = () => {
     fileInputRef.current?.click();
   };
@@ -294,7 +307,6 @@ const ThumbnailComponent = ({
           </div>
         )}
 
-        {/* Watermark settings (normally hidden, shown here for demonstration) */}
         <div className={cn("absolute bottom-10 right-2 bg-black text-white text-xs p-2 rounded-lg border-2 border-gray-500", showWaterMarkOptions ? 'block' : 'hidden')}>
           <label className="flex items-center mb-2 cursor-pointer">
             <input

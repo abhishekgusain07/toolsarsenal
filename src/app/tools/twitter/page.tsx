@@ -16,6 +16,7 @@ import { Rettiwt, type Tweet } from "rettiwt-api"
 import TweetPage from "./tweet"
 import ToggleSwitch from "@/components/ui/toggle"
 import { Bookmark, HeartIcon, Repeat2, Upload } from "lucide-react"
+import Header from "@/app/components/Header"
 
 type ActiveTabs = 'Settings' | 'Edit' | 'Background';
 type SubActiveTabs = 'Gradient' | 'Image' | 'Solid';
@@ -117,6 +118,8 @@ interface EditorSidebarProps {
   const [tweetDateAndViews, setTweetDateAndViews] = useState(false)
   const [showTweetLikesAndShares, setShowTweetLikesAndShares] = useState(true)
   return (
+    <>
+      <Header fileName={fileName} />
         <div id="maindiv" className="flex flex-col sm:flex-row justify-between overflow-auto bg-[#f5f5f5] dark:bg-[#141414]" style={{minHeight:"calc(-56px + 100vh)"}}
         >
           <ThumbnailComponent 
@@ -163,6 +166,7 @@ interface EditorSidebarProps {
             setShowTweetLikesAndShares={setShowTweetLikesAndShares}
         />
       </div>
+    </>
   )
 }
 
@@ -193,7 +197,36 @@ const ThumbnailComponent = ({
   const [tweet, setTweet] = useState<Tweet | null>(null)
   const [userImage, setUserImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const outerDivRef = useRef<HTMLDivElement>(null);
+  const innerDivRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const resizeInnerDiv = () => {
+      if (outerDivRef.current && innerDivRef.current) {
+        const outerRect = outerDivRef.current.getBoundingClientRect();
+        const innerRect = innerDivRef.current.getBoundingClientRect();
+
+        const scale = Math.min(
+          outerRect.width / innerRect.width,
+          outerRect.height / innerRect.height
+        );
+
+        innerDivRef.current.style.transform = `${imageTransform} scale(${scale * imageScale})`;
+      }
+    };
+
+    resizeInnerDiv();
+    window.addEventListener('resize', resizeInnerDiv);
+
+    return () => {
+      window.removeEventListener('resize', resizeInnerDiv);
+    };
+  }, [imageTransform, imageScale, paddingValue, imagePosition,]);
+  
+  const getPadding = () => {
+    const [top, right, bottom, left] = imagePosition.split(' ');
+    return `${top === '0' ? '0rem' : top === '1' ? `${paddingValue}rem` : `${2 * paddingValue}rem`} ${right === '0' ? '0rem' : right === '1' ? `${paddingValue}rem` : `${2 * paddingValue}rem`} ${bottom === '0' ? '0rem' : bottom === '1' ? `${paddingValue}rem` : `${2 * paddingValue}rem`} ${left === '0' ? '0rem' : left === '1' ? `${paddingValue}rem` : `${2 * paddingValue}rem`}`;
+  };
   const handleImageClick = () => {
     fileInputRef.current?.click();
   };
@@ -246,16 +279,13 @@ const ThumbnailComponent = ({
   }
   // const paddingOuter = Position2[imagePosition as keyof typeof Position2](paddingValue)
   return (
-    <div className="flex flex-col  items-center justify-center py-4 w-full">
+    <div className="flex flex-col  items-center justify-center py-4 w-full" style={{scrollbarWidth: "none"}}>
       <div
         id="ss"
+        ref={outerDivRef}
         className="shadow-lg sm:max-w-[50%] md:max-w-[60%]"
         style={{
-          padding: (() => {
-            const value = paddingValue;
-            const [top, right, bottom, left] = imagePosition.split(' ');
-            return `${top === '0' ? '0rem' : top === '1' ? `${value}rem` : `${2 * value}rem`} ${right === '0' ? '0rem' : right === '1' ? `${value}rem` : `${2 * value}rem`} ${bottom === '0' ? '0rem' : bottom === '1' ? `${value}rem` : `${2 * value}rem`} ${left === '0' ? '0rem' : left === '1' ? `${value}rem` : `${2 * value}rem`}`;
-          })(),
+          padding: getPadding(),
           margin: '0px',
           background: subActiveTab === 'Gradient' ? linearGradient : `url(/test${backgroundImage}.webp)`,
           position: 'relative',
@@ -283,6 +313,7 @@ const ThumbnailComponent = ({
             scale: `${imageScale}`,
             transition: 'all 0.25s ease 0s',
           }}
+          
         >
           <div className="bg-white dark:bg-black p-4 rounded-lg min-w-[300px]">
             <label
@@ -312,6 +343,7 @@ const ThumbnailComponent = ({
         ) : (
           <div
           id="imgdiv"
+          ref={innerDivRef}
           style={{
             display: 'grid',
             borderRadius: `${imageBorder}px`,
@@ -467,7 +499,7 @@ const ThumbnailComponent = ({
             style={{ width: '100%' }}
             />
             </div>
-            {tweetDateAndViews && <div className="h-10 flex flex-row gap-[3px] px-2 bg-[rgb(255,255,255)] dark:bg-[rgb(20,20,20)] pt-2">
+            {tweetDateAndViews && <div className=" -mt-1 h-10 flex flex-row gap-[3px] px-2 bg-[rgb(255,255,255)] dark:bg-[rgb(20,20,20)] pt-2">
                 <p className="text-muted-foreground text-sm">{convertDateFormat(tweet?.createdAt || '')}</p>
                 <span className="text-muted-foreground text-sm mx-1">·</span>
                 <p className=" text-sm font-bold">{convertViews(tweet?.viewCount || 0)}</p>
@@ -480,33 +512,34 @@ const ThumbnailComponent = ({
                 alignItems: "start",
                 gap: "4rem",
                 }}
-                className="bg-[rgb(255,255,255)] dark:bg-[rgb(20,20,20)] px-2 pt-2 pb-5 flex flex-row justify-start items-start"
+                className="bg-[rgb(255,255,255)] dark:bg-[rgb(20,20,20)] px-2 pt-2 pb-5 flex flex-row justify-start items-start -mt-1"
             > 
-            <div className="flex flex-row gap-[2px] justify-center items-center">
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="text-muted-foreground size-[1.27rem]">
-            <g className="text-muted-foreground">
-              <path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z" fill="currentColor" stroke="currentColor" strokeWidth="0"/>
-            </g>
-            </svg>
-            <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.replyCount || 0)}</span>
-            </div>
-            <div className="flex flex-row gap-[2px] justify-center items-center">
-            {/* put svg */}
-            <Repeat2 className="size-5 text-muted-foreground" />
-            <span className="text-sm font-medim text-muted-foreground">{convertNumber(tweet?.retweetCount || 0)}</span>
-            </div>
-            <div className="flex flex-row gap-[2px] justify-center items-center">
-            <HeartIcon className="size-4  text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.likeCount || 0)}</span>
-            </div>
-            <div className="flex flex-row gap-[2px] justify-center items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-heart size-4 text-muted-foreground"><title>views</title><g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></g></svg>
-            <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.viewCount || 0)}</span>
-            </div>
-            <div className="flex flex-row gap-3 justify-center items-center pr-2">
-              <Bookmark className="size-5 text-muted-foreground" />
-              <Upload className="size-5 text-muted-foreground" />
-            </div> 
+              <div className="flex flex-row gap-[2px] justify-center items-center">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="text-muted-foreground size-[1.27rem]">
+                <g className="text-muted-foreground">
+                  <path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z" fill="currentColor" stroke="currentColor" strokeWidth="0"/>
+                </g>
+                </svg>
+                <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.replyCount || 0)}</span>
+              </div>
+
+              <div className="flex flex-row gap-[2px] justify-center items-center">
+                <Repeat2 className="size-5 text-muted-foreground" />
+                <span className="text-sm font-medim text-muted-foreground">{convertNumber(tweet?.retweetCount || 0)}</span>
+              </div>
+
+              <div className="flex flex-row gap-[2px] justify-center items-center">
+                <HeartIcon className="size-4  text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.likeCount || 0)}</span>
+              </div>
+              <div className="flex flex-row gap-[2px] justify-center items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-heart size-4 text-muted-foreground"><title>views</title><g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></g></svg>
+                <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.viewCount || 0)}</span>
+              </div>
+              <div className="flex flex-row gap-3 justify-center items-center pr-5">
+                <Bookmark className="size-5 text-muted-foreground" />
+                <Upload className="size-5 text-muted-foreground" />
+              </div> 
             </div>
             }
         </div>
