@@ -533,7 +533,7 @@ const ThumbnailComponent = ({
                 <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.likeCount || 0)}</span>
               </div>
               <div className="flex flex-row gap-[2px] justify-center items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-heart size-4 text-muted-foreground"><title>views</title><g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></g></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-heart size-4 text-muted-foreground"><title>views</title><g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"/></g></svg>
                 <span className="text-sm font-medium text-muted-foreground">{convertNumber(tweet?.viewCount || 0)}</span>
               </div>
               <div className="flex flex-row gap-3 justify-center items-center pr-5">
@@ -805,7 +805,7 @@ const EditorSidebar = ({
                 </div>
               </div>
               <div className="flex items-center text-sm mb-4 mt-4">
-                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 384 512" className="mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 384 512" className="mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                   <title>File Name</title>
                   <path d="M369.9 97.9L286 14C277 5 264.8-.1 252.1-.1H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V131.9c0-12.7-5.1-25-14.1-34zM332.1 128H256V51.9l76.1 76.1zM48 464V48h160v104c0 13.3 10.7 24 24 24h104v288H48z"/>
                 </svg>
@@ -816,7 +816,7 @@ const EditorSidebar = ({
                 onClick={handleReset}
               >
                 Reset 
-                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
+                <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
                 <title>Reset</title>
                   <path fill="none" d="M0 0h24v24H0V0z"/>
                   <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/>

@@ -430,10 +430,10 @@ const ThumbnailComponent = ({
         />
       </svg>
     </div>
-    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16" color="#536471" height="16" width="16" xmlns="http://www.w3.org/2000/svg" style={{color: "rgb(83, 100, 113)"}}>
+    <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 16 16" color="#536471" height="16" width="16" xmlns="http://www.w3.org/2000/svg" style={{color: "rgb(83, 100, 113)"}}>
     <title>temp</title><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1z"/></svg>
     
-    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" color="#536471" height="18" width="18" xmlns="http://www.w3.org/2000/svg" style={{color: "rgb(83, 100, 113)"}}><title>temp2</title><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" color="#536471" height="18" width="18" xmlns="http://www.w3.org/2000/svg" style={{color: "rgb(83, 100, 113)"}}><title>temp2</title><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
       </div>
     </div>
    </div>
@@ -690,7 +690,7 @@ const EditorSidebar = ({
                 </div>
               </div>
               <div className="flex items-center text-sm mb-4 mt-4">
-                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 384 512" className="mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 384 512" className="mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                   <title>File Name</title>
                   <path d="M369.9 97.9L286 14C277 5 264.8-.1 252.1-.1H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V131.9c0-12.7-5.1-25-14.1-34zM332.1 128H256V51.9l76.1 76.1zM48 464V48h160v104c0 13.3 10.7 24 24 24h104v288H48z"/>
                 </svg>
@@ -701,7 +701,7 @@ const EditorSidebar = ({
                 onClick={handleReset}
               >
                 Reset 
-                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
+                <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="16" width="16" xmlns="http://www.w3.org/2000/svg">
                 <title>Reset</title>
                   <path fill="none" d="M0 0h24v24H0V0z"/>
                   <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/>
