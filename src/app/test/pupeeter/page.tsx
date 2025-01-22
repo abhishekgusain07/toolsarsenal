@@ -27,13 +27,13 @@ export default function ScreenshotTaker() {
       const imageUrl = URL.createObjectURL(blob);
       
       // Download the image and store it in the @public folder
-    //   const randomName = `screenshot-${Date.now()}.png`;
-    //   const link = document.createElement('a');
-    //   link.href = imageUrl;
-    //   link.download = randomName;
-    //   document.body.appendChild(link);
-    //   link.click();
-    //   document.body.removeChild(link);
+      const randomName = `screenshot-${Date.now()}.png`;
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = randomName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
       // Display the image on the same page
       const imgElement = document.createElement('img');
